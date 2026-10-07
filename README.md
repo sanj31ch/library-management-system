@@ -1,0 +1,214 @@
+# 📚 Library Management System
+
+A web-based **Library Management System** developed using **Python Flask and MySQL** to simplify and digitize library operations such as book management, issuing and returning books, student records, book requests, fines, notifications, and library tracking.
+
+## 🚀 Project Overview
+
+The Library Management System is designed to replace manual library management with a centralized web-based system.
+
+It provides separate functionalities for **Admin, Librarian, and Student** users and helps manage books, users, transactions, requests, and library records efficiently.
+
+## ✨ Features
+
+* 🔐 Role-based login for Admin, Librarian, and Student
+* 📚 Add, delete, and manage books
+* 👨‍🎓 Student registration and management
+* 📖 Issue and return books
+* 🔍 Search and view available books
+* 📝 Book request management
+* ✅ Approve or reject book requests
+* 📜 Book issue and return history
+* 💰 Fine management
+* 🔔 Notifications and library notices
+* 📊 Library record tracking
+* 👤 Librarian management
+* 📋 Subscription management
+* 📥 Import book data using Excel
+* 🗄️ MySQL database integration
+
+## 🛠️ Technologies Used
+
+| Technology    | Purpose                      |
+| ------------- | ---------------------------- |
+| Python        | Backend programming          |
+| Flask         | Web application framework    |
+| MySQL         | Database management          |
+| HTML          | Web page structure           |
+| CSS           | User interface styling       |
+| JavaScript    | Frontend functionality       |
+| Pandas        | Excel/data processing        |
+| OpenPyXL      | Excel file handling          |
+| python-dotenv | Secure environment variables |
+
+## 👥 User Roles
+
+### 👨‍💼 Admin
+
+* Manage library records
+* Manage librarians and students
+* Monitor library activities
+* Manage notices and settings
+* View reports and records
+
+### 👩‍💼 Librarian
+
+* Manage books
+* Issue and return books
+* Manage book requests
+* Track overdue books
+* Manage fines
+* Maintain student library records
+
+### 👨‍🎓 Student
+
+* Search for books
+* Request books
+* View issued books
+* View book history
+* Check notifications and library information
+
+## 📂 Project Structure
+
+```text
+library-management-system/
+│
+├── static/
+├── templates/
+│
+├── book.py
+├── database.py
+├── library.py
+├── server.py
+├── studin.py
+│
+├── booklist.xlsx
+├── demodatastu18.xlsx
+├── requirements.txt
+├── .gitignore
+└── README.md
+```
+
+> 🔒 The `.env` file is intentionally not included in the repository because it contains local database credentials.
+
+## ⚙️ Installation
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/sanj31ch/library-management-system.git
+cd library-management-system
+```
+
+### 2. Create a virtual environment
+
+```bash
+python -m venv venv
+```
+
+Activate it on Windows:
+
+```bash
+venv\Scripts\activate
+```
+
+### 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Configure MySQL
+
+Make sure **MySQL Server** is installed and running.
+
+Create a `.env` file in the project folder:
+
+```text
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=YOUR_MYSQL_PASSWORD
+```
+
+Replace `YOUR_MYSQL_PASSWORD` with your own MySQL password.
+
+### 5. Initialize the database
+
+Run:
+
+```bash
+python database.py
+```
+
+The application will create/use the required `LIBRARYDB` database and tables.
+
+### 6. Start the application
+
+Run the Flask server:
+
+```bash
+python server.py
+```
+
+Then open the local address shown in the terminal in your browser.
+
+## 🔐 Security
+
+Database credentials are stored in environment variables instead of being directly written in the source code.
+
+The `.env` file is excluded using `.gitignore` and should **never be uploaded to GitHub**.
+
+## 📸 Screenshots
+
+Screenshots of the application interface can be added here to demonstrate the working project.
+
+Example:
+
+```text
+screenshots/
+├── login.png
+├── admin-dashboard.png
+├── librarian-dashboard.png
+├── student-dashboard.png
+└── book-management.png
+```
+
+## 🔮 Future Scope
+
+* 📱 Android mobile application
+* 🔐 OTP-based secure login
+* 📷 QR code / barcode-based book scanning
+* ☁️ Cloud database and deployment
+* 📊 Advanced analytics and reports
+* 🔔 Improved real-time notifications
+
+## 🎯 Learning Outcomes
+
+Through this project, I gained practical experience in:
+
+* Python and Flask web development
+* MySQL database management
+* CRUD operations
+* Backend API development
+* HTML, CSS and JavaScript
+* Database connectivity
+* Excel data processing
+* Environment variable management
+* Git and GitHub
+* Developing a real-world web application
+
+## 👩‍💻 Author
+
+**Sanjana Chinta**
+
+Computer Technology / B.Tech Student
+
+Interested in:
+
+* Artificial Intelligence & Machine Learning
+* Data Analytics
+* Web Development
+* Database Management
+
+---
+
+⭐ If you find this project useful, consider giving it a star!
