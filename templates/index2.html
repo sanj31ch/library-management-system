@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GP Library Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    body {
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      background: url('https://images.unsplash.com/photo-1535905557558-afc4877a26fc?auto=format&fit=crop&w=1470&q=80') no-repeat center center fixed;
+      background-size: cover;
+    }
+    .blur-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      backdrop-filter: blur(8px);
+      z-index: -1;
+    }
+    .sidebar {
+      width: 260px;
+      height: 100vh;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(15px);
+      padding: 20px;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .sidebar-title {
+      font-size: 1.6rem;
+      color: white;
+      font-weight: bold;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .sidebar-btn, .logout-btn {
+      width: 100%;
+      padding: 14px 18px;
+      margin-bottom: 10px;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 1rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      transition: 0.3s ease;
+    }
+
+    /* Gradient colors */
+    .home-btn { background: linear-gradient(135deg, #6a11cb, #2575fc); }
+    .manage-btn { background: linear-gradient(135deg, #ff416c, #ff4b2b); }
+    .view-profile-btn { background: linear-gradient(135deg, #43cea2, #185a9d); }
+    .view-books-btn { background: linear-gradient(135deg, #f7971e, #ffd200); }
+    .students-btn { background: linear-gradient(135deg, #8e2de2, #4a00e0); }
+    .notice-btn { background: linear-gradient(135deg, #00c6ff, #0072ff); }
+    .attendance-btn { background: linear-gradient(135deg, #00b09b, #96c93d); }
+    .logout-btn { background: linear-gradient(135deg, #ff512f, #dd2476); }
+    
+
+    .sidebar-btn:hover, .logout-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+    }
+
+    .dropdown-content {
+      display: none;
+      flex-direction: column;
+      margin-left: 15px;
+      margin-top: -5px;
+    }
+
+    .sidebar-btn.dropdown.active + .dropdown-content {
+      display: flex;
+    }
+
+    .dropdown-content button {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      color: white;
+      font-size: 0.9rem;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    .dropdown-content button:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .dashboard {
+      flex: 1;
+      padding: 30px;
+      color: white;
+    }
+
+    .dashboard h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="blur-bg"></div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-title"><i class="fas fa-book-open"></i> GP Library</div>
+
+      <button class="sidebar-btn home-btn"><i class="fas fa-home"></i> Home</button>
+
+      <button class="sidebar-btn manage-btn dropdown"><i class="fas fa-cogs"></i> Manage</button>
+      <div class="dropdown-content">
+        <button><i class="fas fa-book"></i> Manage Books</button>
+        <button><i class="fas fa-user-graduate"></i> Manage Students</button>
+        <button><i class="fas fa-user-cog"></i> Manage Account</button>
+      </div>
+
+      <button class="sidebar-btn view-profile-btn"><i class="fas fa-id-card"></i> View Profile</button>
+      <button class="sidebar-btn view-books-btn"><i class="fas fa-book-reader"></i> View Books</button>
+      <button class="sidebar-btn students-btn"><i class="fas fa-users"></i> Students</button>
+      <button class="sidebar-btn notice-btn"><i class="fas fa-bell"></i> Notice</button>
+
+      <button class="sidebar-btn attendance-btn dropdown"><i class="fas fa-calendar-check"></i> Attendance</button>
+      <div class="dropdown-content">
+        <button><i class="fas fa-user-check"></i> Mark Attendance</button>
+        <button><i class="fas fa-eye"></i> View Attendance</button>
+      </div>
+    </div>
+
+    <button class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+
+  <!-- Dashboard Content -->
+  <div class="dashboard">
+    <h1>Welcome to GP Library Dashboard</h1>
+    <h3> Behind every Great library is an Admin who keeps it Alive and Accessible...</h3>
+  </div>
+
+  <!-- Script -->
+  <script>
+    const dropdowns = document.querySelectorAll('.sidebar-btn.dropdown');
+    dropdowns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        dropdowns.forEach(b => {
+          if (b !== btn) b.classList.remove('active');
+        });
+        btn.classList.toggle('active');
+      });
+    });
+  </script>
+</body>
+</html>

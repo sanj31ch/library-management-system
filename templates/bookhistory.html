@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GP Library Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      background: url('https://images.unsplash.com/photo-1535905557558-afc4877a26fc?auto=format&fit=crop&w=1470&q=80') no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    .blur-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      backdrop-filter: blur(8px);
+      z-index: -1;
+    }
+
+    .sidebar {
+      width: 260px;
+      height: 100vh;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(15px);
+      padding: 20px;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .sidebar-title {
+      font-size: 1.6rem;
+      color: white;
+      font-weight: bold;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .sidebar-btn, .logout-btn {
+      width: 100%;
+      padding: 14px 18px;
+      margin-bottom: 10px;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 1rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      transition: 0.3s ease;
+    }
+
+    .home-btn { background: linear-gradient(135deg, #6a11cb, #2575fc); }
+    .view-profile-btn { background: linear-gradient(135deg, #43cea2, #185a9d); }
+    .view-books-btn { background: linear-gradient(135deg, #f7971e, #ffd200); }
+    .book-history-btn { background: linear-gradient(135deg, #9C27B0, #673AB7); }
+    .students-btn { background: linear-gradient(135deg, #8e2de2, #4a00e0); }
+    .notice-btn { background: linear-gradient(135deg, #00c6ff, #0072ff); }
+    .attendance-btn { background: linear-gradient(135deg, #00b09b, #96c93d); }
+    .logout-btn { background: linear-gradient(135deg, #ff512f, #dd2476); }
+
+    .sidebar-btn:hover, .logout-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+    }
+
+    .dropdown-content {
+      display: none;
+      flex-direction: column;
+      margin-left: 15px;
+      margin-top: -5px;
+    }
+
+    .sidebar-btn.dropdown.active + .dropdown-content {
+      display: flex;
+    }
+
+    .dropdown-content button {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      color: white;
+      font-size: 0.9rem;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    .dropdown-content button:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .dashboard {
+      flex: 1;
+      padding: 30px;
+      color: white;
+      overflow-y: auto;
+    }
+
+    .home-layout {
+      text-align: center;
+    }
+
+    .home-layout h1 {
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+    }
+
+    .home-layout p {
+      margin-bottom: 30px;
+      font-size: 1rem;
+      color: #ddd;
+    }
+
+    /* Book History Styles */
+    .book-history-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .history-tabs {
+      display: flex;
+      margin-bottom: 20px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .history-tab {
+      flex: 1;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .history-tab.active {
+      background: rgba(255,255,255,0.2);
+      font-weight: bold;
+    }
+
+    .history-table-container {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 0 12px rgba(255,255,255,0.1);
+    }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      color: white;
+    }
+
+    .history-table th {
+      background: rgba(255,255,255,0.15);
+      padding: 12px;
+      text-align: left;
+    }
+
+    .history-table td {
+      padding: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .history-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .history-table tr:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .search-box {
+      padding: 10px;
+      width: 300px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      font-size: 1rem;
+      border: none;
+      outline: none;
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+    }
+
+    .return-action-btn {
+      background: linear-gradient(135deg, #43cea2, #185a9d);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .back-btn-container {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .back-btn {
+      background: linear-gradient(135deg, #ff416c, #ff4b2b);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    @media (max-width: 768px) {
+      .history-table {
+        display: block;
+        overflow-x: auto;
+      }
+    }
+
+    @media (max-width: 500px) {
+      .history-tabs {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="blur-bg"></div>
+
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-title"><i class="fas fa-book-open"></i> GP Library</div>
+      <button class="sidebar-btn home-btn" onclick="window.location.href='/library'"><i class="fas fa-home"></i> Home</button>
+      <button class="sidebar-btn view-profile-btn" onclick="window.location.href='/library'"><i class="fas fa-id-card"></i> View Profile</button>
+      <button class="sidebar-btn view-profile-btn" onclick="window.location.href='/library'"><i class="fas fa-id-card"></i> View Profile</button>
+      <button class="sidebar-btn view-books-btn"onclick="window.location.href='/library'"><i class="fas fa-book-reader"></i> View Books</button>
+      <button class="sidebar-btn book-history-btn" onclick="window.location.href='/library'"><i class="fas fa-history"></i> Book History</button>
+      <button class="sidebar-btn students-btn" onclick="window.location.href='/library'"><i class="fas fa-users"></i> Students</button>
+      <button class="sidebar-btn notice-btn dropdown" onclick="window.location.href='/library'"><i class="fas fa-bell"></i> Notice</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/library'"><i class="fas fa-paper-plane" ></i> Send Notice</button>
+        <button onclick="window.location.href='/library'"><i class="fas fa-eye"></i> View Notices</button>
+      </div>
+      <button class="sidebar-btn attendance-btn dropdown"><i class="fas fa-calendar-check"></i> Attendance</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/library'"><i class="fas fa-user-check"></i> Mark Attendance</button>
+        <button onclick="window.location.href='/library'"><i class="fas fa-eye"></i> View Attendance</button>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="window.location.href='/'"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+
+  <div class="dashboard" id="dashboard-content">
+    <div class="home-layout">
+      <h1><i class="fas fa-history"></i> Book History</h1>
+      
+      <div class="book-history-container">
+        <div class="history-tabs">
+          <div class="history-tab active" data-tab="issued">Issued Books</div>
+          <div class="history-tab" data-tab="returned">Returned Books</div>
+        </div>
+        
+        <div class="history-table-container" id="issuedBooksTable">
+          <input type="text" id="issuedSearch" placeholder="Search issued books..." class="search-box" />
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Book ID</th>
+                <th>Student ID</th>
+                <th>Book Name</th>
+                <th>Student Name</th>
+                <th>Year</th>
+                <th>Course</th>
+                <th>Semester</th>
+                <th>Date of Issue</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="issuedBooksBody"></tbody>
+          </table>
+          <div class="back-btn-container">
+            <button class="back-btn" onclick="location.reload()">Back to Home</button>
+          </div>
+        </div>
+        
+       <!-- <div class="history-table-container" id="returnedBooksTable" style="display: none;">
+          <input type="text" id="returnedSearch" placeholder="Search returned books..." class="search-box" />
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Book ID</th>
+                <th>Student ID</th>
+                <th>Book Name</th>
+                <th>Student Name</th>
+                <th>Year</th>
+                <th>Course</th>
+                <th>Semester</th>
+                <th>Date of Issue</th>
+                <th>Date of Return</th>
+              </tr>
+            </thead>
+            <tbody id="returnedBooksBody"></tbody>
+          </table>-->
+          <div class="back-btn-container">
+            <button class="back-btn" onclick="location.reload()">Back</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Sample data for issued and returned books
+    let issuedBooks = [
+      { bookId: '101', studentId: 'S001', bookName: 'Java Basics', studentName: 'Rahul Sharma', year: '2nd', course: 'BCA', semester: 'III', dateOfIssue: '2023-05-15' },
+      { bookId: '102', studentId: 'S002', bookName: 'HTML & CSS', studentName: 'Priya Patel', year: '1st', course: 'BSc IT', semester: 'II', dateOfIssue: '2023-06-10' },
+      { bookId: '103', studentId: 'S003', bookName: 'Data Structures', studentName: 'Amit Singh', year: '3rd', course: 'MCA', semester: 'V', dateOfIssue: '2023-04-22' }
+    ];
+
+    let returnedBooks = [
+      { bookId: '101', studentId: 'S001', bookName: 'Java Basics', studentName: 'Rahul Sharma', year: '2nd', course: 'BCA', semester: 'III', dateOfIssue: '2023-05-15', dateOfReturn: '2023-06-15' },
+      { bookId: '104', studentId: 'S004', bookName: 'Python Programming', studentName: 'Neha Gupta', year: '2nd', course: 'BSc CS', semester: 'IV', dateOfIssue: '2023-03-10', dateOfReturn: '2023-04-10' }
+    ];
+
+    // DOM elements
+    const dashboardContent = document.getElementById("dashboard-content");
+    const dropdowns = document.querySelectorAll('.sidebar-btn.dropdown');
+
+    // Initialize dropdown functionality
+    dropdowns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        dropdowns.forEach(b => { if (b !== btn) b.classList.remove('active'); });
+        btn.classList.toggle('active');
+      });
+    });
+
+    // Initialize the book history view
+    document.addEventListener('DOMContentLoaded', showBookHistory);
+
+    // Sidebar button click handlers
+    document.querySelector(".home-btn").addEventListener("click", () => {
+      location.reload();
+    });
+
+    document.querySelector(".view-profile-btn").addEventListener("click", () => {
+      alert("View Profile functionality will be implemented here!");
+    });
+
+    document.querySelector(".view-books-btn").addEventListener("click", () => {
+      alert("View Books functionality will be implemented here!");
+    });
+
+    document.querySelector(".book-history-btn").addEventListener("click", showBookHistory);
+
+    document.querySelector(".students-btn").addEventListener("click", () => {
+      alert("Students functionality will be implemented here!");
+    });
+
+    document.querySelector(".logout-btn").addEventListener("click", () => {
+      alert("Logged out successfully!");
+      location.reload();
+    });
+
+    // Dropdown button handlers
+    document.querySelectorAll('.dropdown-content button')[0].addEventListener("click", () => {
+      alert("Send Notice functionality will be implemented here!");
+    });
+
+    document.querySelectorAll('.dropdown-content button')[1].addEventListener("click", () => {
+      alert("View Notices functionality will be implemented here!");
+    });
+
+    document.querySelectorAll('.dropdown-content button')[2].addEventListener("click", () => {
+      alert("Mark Attendance functionality will be implemented here!");
+    });
+
+    document.querySelectorAll('.dropdown-content button')[3].addEventListener("click", () => {
+      alert("View Attendance functionality will be implemented here!");
+    });
+
+    function showBookHistory() {
+      // Populate issued books table
+      const issuedBooksBody = document.getElementById('issuedBooksBody');
+      issuedBooksBody.innerHTML = '';
+      issuedBooks.forEach(book => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${book.bookId}</td>
+          <td>${book.studentId}</td>
+          <td>${book.bookName}</td>
+          <td>${book.studentName}</td>
+          <td>${book.year}</td>
+          <td>${book.course}</td>
+          <td>${book.semester}</td>
+          <td>${book.dateOfIssue}</td>
+          <td><button class="return-action-btn" data-bookid="${book.bookId}" data-studentid="${book.studentId}">Return</button></td>
+        `;
+        issuedBooksBody.appendChild(row);
+      });
+      
+      // Populate returned books table
+      const returnedBooksBody = document.getElementById('returnedBooksBody');
+      returnedBooksBody.innerHTML = '';
+      returnedBooks.forEach(book => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${book.bookId}</td>
+          <td>${book.studentId}</td>
+          <td>${book.bookName}</td>
+          <td>${book.studentName}</td>
+          <td>${book.year}</td>
+          <td>${book.course}</td>
+          <td>${book.semester}</td>
+          <td>${book.dateOfIssue}</td>
+          <td>${book.dateOfReturn}</td>
+        `;
+        returnedBooksBody.appendChild(row);
+      });
+      
+      // Tab switching functionality
+      const tabs = document.querySelectorAll('.history-tab');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            if (tab.dataset.tab === 'issued') {
+              document.getElementById('issuedBooksTable').style.display = 'block';
+              document.getElementById('returnedBooksTable').style.display = 'none';
+            } else {
+              document.getElementById('issuedBooksTable').style.display = 'none';
+              document.getElementById('returnedBooksTable').style.display = 'block';
+            }
+        });
+      });
+      
+      // Search functionality for issued books
+      document.getElementById('issuedSearch').addEventListener('keyup', function() {
+        const filter = this.value.toUpperCase();
+        const rows = document.querySelectorAll('#issuedBooksBody tr');
+        rows.forEach(row => {
+          const bookName = row.cells[2].textContent.toUpperCase();
+          const studentName = row.cells[3].textContent.toUpperCase();
+          row.style.display = (bookName.includes(filter) || studentName.includes(filter)) ? '' : 'none';
+        });
+      });
+      
+      // Search functionality for returned books
+      document.getElementById('returnedSearch').addEventListener('keyup', function() {
+        const filter = this.value.toUpperCase();
+        const rows = document.querySelectorAll('#returnedBooksBody tr');
+        rows.forEach(row => {
+          const bookName = row.cells[2].textContent.toUpperCase();
+          const studentName = row.cells[3].textContent.toUpperCase();
+          row.style.display = (bookName.includes(filter) || studentName.includes(filter)) ? '' : 'none';
+        });
+      });
+
+      // Return book action buttons
+      document.querySelectorAll('.return-action-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const bookId = this.getAttribute('data-bookid');
+          const studentId = this.getAttribute('data-studentid');
+          const today = new Date().toISOString().split('T')[0];
+          
+          returnBook(bookId, studentId, today);
+        });
+      });
+    }
+
+    function returnBook(bookId, studentId, returnDate) {
+      // Find the issued book
+      const issuedBookIndex = issuedBooks.findIndex(
+        book => book.bookId === bookId && book.studentId === studentId
+      );
+      
+      if (issuedBookIndex !== -1) {
+        const issuedBook = issuedBooks[issuedBookIndex];
+        
+        // Add to returned books
+        returnedBooks.push({
+          ...issuedBook,
+          dateOfReturn: returnDate
+        });
+        
+        // Remove from issued books
+        issuedBooks.splice(issuedBookIndex, 1);
+        
+        alert('Book returned successfully!');
+        showBookHistory(); // Refresh the view
+      } else {
+        alert('No matching issued book found!');
+      }
+    }
+  </script>
+</body>
+</html>

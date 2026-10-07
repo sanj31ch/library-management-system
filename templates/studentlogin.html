@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Library Management</title>
+  <link rel="stylesheet" href="{{url_for('static',filename='style.css')}}">
+  <style>
+     body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Poppins', sans-serif;
+  background: url('static/images/back8.jpg') no-repeat center center fixed;
+  background-size: cover;
+  backdrop-filter: blur(10px);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  overflow: hidden;
+}
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-glass">
+      <!-- Back Button -->
+      <button class="back-btn" onclick="window.history.back()">
+        <i>←</i> Back
+      </button>
+      
+      <div class="login-header">
+        <img src="https://cdn-icons-png.flaticon.com/512/2232/2232688.png" alt="Library Icon" class="logo">
+        <h1>GP Library Management</h1>
+        <p>Student Login Portal</p>
+      </div>
+      
+      <form class="login-form" id="login">
+        <div class="input-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" placeholder="Enter your username" required>
+          <i class="icon">👤</i>
+        </div>
+        
+        <div class="input-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter your password" required>
+          <i class="icon">🔒</i>
+        </div>
+        
+        <button type="submit" class="login-btn" onclick="check()">Login</button>
+        
+      </form>
+      
+      <div class="login-footer">
+        <div class="input-footer"><h6 id="status" style="color: red;font-size: 99%;"></h6></div>
+        <p>Did you forget your password? <a href="#">Contact Librarian</a></p>
+      </div>
+      <div class="login-footer">
+        <p>Don't have an account? <a href="#">Contact Librarian</a></p>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.getElementById('login').addEventListener("submit",function(e){
+      e.preventDefault();
+    })
+    function check(){
+      let user=document.getElementById('username').value;
+      let pass=document.getElementById('password').value;
+      if (user=='' || pass=='') {
+        document.getElementById('status').innerText='Please Fill details';
+      } 
+      fetch('/slog',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({username:user,password:pass})
+      })
+      .then(response=>response.json())
+      .then(data=>{
+        let status=data;
+        if (status=='Valid') {
+          window.location.href='/students';
+        }
+        if(status=='Invalid'){
+          document.getElementById('status').innerText='Incorrect Username or Password';
+        }
+      })
+    }
+  </script>
+</body>
+</html>

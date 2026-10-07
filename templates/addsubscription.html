@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Add Subscription | GP Library</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    *{
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      background: url('/static/images/back.avif') no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    .blur-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      backdrop-filter: blur(8px);
+      z-index: -1;
+    }
+
+    .sidebar {
+      width: 260px;
+      height: 100vh;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(15px);
+      padding: 20px;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .sidebar-title {
+      font-size: 1.6rem;
+      color: white;
+      font-weight: bold;
+      margin-bottom: 30px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .sidebar-btn, .logout-btn {
+      width: 100%;
+      padding: 14px 18px;
+      margin-bottom: 10px;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 1rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-btn:hover, .logout-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+    }
+
+    /* Gradient colors for sidebar buttons */
+    .home-btn { background: linear-gradient(135deg, #6a11cb, #2575fc); }
+    .view-profile-btn { background: linear-gradient(135deg, #43cea2, #185a9d); }
+    .view-books-btn { background: linear-gradient(135deg, #f7971e, #ffd200); }
+    .book-history-btn { background: linear-gradient(135deg, #8e2de2, #4a00e0); }
+    .students-btn { background: linear-gradient(135deg, #8e2de2, #4a00e0); }
+    .notice-btn { background: linear-gradient(135deg, #00c6ff, #0072ff); }
+    .attendance-btn { background: linear-gradient(135deg, #00b09b, #96c93d); }
+    .logout-btn { background: linear-gradient(135deg, #ff512f, #dd2476); }
+
+    .dropdown-content {
+      display: none;
+      flex-direction: column;
+      margin-left: 15px;
+      margin-top: -5px;
+      margin-bottom: 15px;
+    }
+
+    .sidebar-btn.dropdown.active + .dropdown-content {
+      display: flex;
+    }
+
+    .dropdown-content button {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      color: white;
+      font-size: 0.9rem;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .dropdown-content button:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .dashboard {
+      flex: 1;
+      padding: 30px;
+      color: white;
+      overflow-y: auto;
+    }
+
+    /* Form Styles */
+    .subscription-form {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(15px);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      max-width: 800px;
+      margin: 0 auto 30px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .subscription-form h2 {
+      font-size: 1.8rem;
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      color: white;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: white;
+    }
+
+    .form-group input, 
+    .form-group select {
+      width: 100%;
+      padding: 12px 15px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      color: white;
+    }
+
+    .form-group input:focus, 
+    .form-group select:focus {
+      border-color: rgba(255,255,255,0.4);
+      outline: none;
+      background: rgba(255,255,255,0.2);
+    }
+
+    .student-info {
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-left: 4px solid rgba(41, 182, 246, 0.8);
+      color: white;
+    }
+
+    .student-info h4 {
+      margin-bottom: 10px;
+      color: white;
+    }
+
+    .plan-details {
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-left: 4px solid rgba(102, 187, 106, 0.8);
+      color: white;
+    }
+
+    .plan-details h4 {
+      margin-bottom: 10px;
+      color: white;
+    }
+
+    .payment-method-group {
+      margin-bottom: 20px;
+    }
+
+    .payment-method-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: white;
+    }
+
+    .payment-amount {
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-left: 4px solid rgba(255, 179, 0, 0.8);
+      color: white;
+    }
+
+    .payment-amount h4 {
+      margin-bottom: 10px;
+      color: white;
+    }
+
+    .transaction-input {
+      display: none;
+      margin-top: 10px;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .activate-btn, .download-btn, .generate-report-btn {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .activate-btn {
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      color: white;
+    }
+
+    .download-btn, .generate-report-btn {
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+
+    .activate-btn:hover, .download-btn:hover, .generate-report-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+
+    /* Subscription Table Styles */
+    .subscription-table-container {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(15px);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      margin-top: 30px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .subscription-table-container h2 {
+      font-size: 1.8rem;
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      color: white;
+    }
+
+    .filter-container {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .filter-group {
+      flex: 1;
+    }
+
+    .filter-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: white;
+    }
+
+    .filter-group select, 
+    .filter-group input {
+      width: 100%;
+      padding: 12px 15px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      font-size: 1rem;
+      color: white;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      color: white;
+    }
+
+    .data-table th {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      padding: 12px 15px;
+      text-align: left;
+    }
+
+    .data-table td {
+      padding: 12px 15px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .data-table tr:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .status-badge {
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: white;
+    }
+
+    .status-badge.active {
+      background: rgba(102, 187, 106, 0.8);
+    }
+
+    .status-badge.expired {
+      background: rgba(239, 83, 80, 0.8);
+    }
+
+    .status-badge.pending {
+      background: rgba(255, 179, 0, 0.8);
+    }
+
+    .action-btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.3s ease;
+      color: white;
+    }
+
+    .action-btn.view {
+      background: rgba(41, 182, 246, 0.8);
+    }
+
+    .action-btn.renew {
+      background: rgba(102, 187, 106, 0.8);
+    }
+
+    .action-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(46, 204, 113, 0.9);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.error {
+      background: rgba(231, 76, 60, 0.9);
+    }
+
+    .toast i {
+      font-size: 1.2rem;
+    }
+
+    .table-header-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 70px;
+        overflow: hidden;
+      }
+      
+      .sidebar-title span, 
+      .sidebar-btn span,
+      .dropdown-content button span,
+      .logout-btn span {
+        display: none;
+      }
+      
+      .sidebar-btn {
+        justify-content: center;
+        padding: 15px 0;
+      }
+      
+      .dashboard {
+        margin-left: 70px;
+      }
+      
+      .filter-container {
+        flex-direction: column;
+      }
+      
+      .table-header-actions {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="blur-bg"></div>
+
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-title"><i class="fas fa-book-open"></i> GP Library</div>
+      <button class="sidebar-btn home-btn" onclick="window.location.href='/libhome'"><i class="fas fa-home"></i> Home</button>
+      <button class="sidebar-btn view-profile-btn" onclick="window.location.href='/libprofile'"><i class="fas fa-id-card"></i> View Profile</button>
+      <button class="sidebar-btn view-books-btn" onclick="window.location.href='/libbooks'"><i class="fas fa-book-reader"></i> View Books</button>
+      <button class="sidebar-btn book-history-btn" onclick="window.location.href='/libhistory'"><i class="fas fa-history"></i> Book History</button>
+      <button class="sidebar-btn students-btn" onclick="window.location.href='/libstudents'"><i class="fas fa-users"></i> Students</button>
+      <button class="sidebar-btn notice-btn dropdown"><i class="fas fa-bell"></i> Notice</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libsend_notice'"><i class="fas fa-paper-plane"></i> Send Notice</button>
+        <button onclick="window.location.href='/libview_notice'"><i class="fas fa-eye"></i> View Notices</button>
+      </div>
+      <button class="sidebar-btn attendance-btn dropdown"><i class="fas fa-calendar-check"></i> Attendance</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libmark_attendence'"><i class="fas fa-user-check"></i> Mark Attendance</button>
+        <button onclick="window.location.href='/libview_attendance'"><i class="fas fa-eye"></i> View Attendance</button>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="window.location.href='/'"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+ 
+  <div class="dashboard">
+    <div class="subscription-form">
+      <h2><i class="fas fa-id-card-alt"></i> Subscription Records</h2>
+      
+      <div class="form-group">
+        <label for="student-search">Search Student (Name or ID)</label>
+        <input type="text" id="student-search" placeholder="Enter student name or ID">
+      </div>
+      
+      <div id="student-info-container" class="student-info" style="display: none;">
+        <h4>Student Information</h4>
+        <div id="student-details"></div>
+      </div>
+      
+      <div class="form-group">
+        <label for="subscription-plan">Select Subscription Plan</label>
+        <select id="subscription-plan">
+          <option value="">-- Select Plan --</option>
+          <option value="basic">Basic Plan (₹500/month)</option>
+          <option value="standard">Standard Plan (₹800/month)</option>
+          <option value="premium">Premium Plan (₹1200/month)</option>
+        </select>
+      </div>
+      
+      <div id="plan-details-container" class="plan-details" style="display: none;">
+        <h4>Plan Details</h4>
+        <div id="plan-details"></div>
+      </div>
+      
+      <div class="payment-method-group">
+        <label for="payment-method">Payment Method</label>
+        <select id="payment-method">
+          <option value="">-- Select Payment Method --</option>
+          <option value="cash">Cash</option>
+          <option value="transaction">Transaction ID</option>
+        </select>
+      </div>
+      
+      <div id="payment-amount-container" class="payment-amount" style="display: none;">
+        <h4>Payment Amount</h4>
+        <div id="payment-amount"></div>
+      </div>
+      
+      <div id="transaction-input" class="transaction-input">
+        <label for="transaction-id">Enter Transaction ID</label>
+        <input type="text" id="transaction-id" placeholder="Enter transaction ID">
+      </div>
+      
+      <div class="form-actions">
+        <button class="download-btn" id="download-btn" disabled>
+          <i class="fas fa-download"></i> Download Receipt
+        </button>
+        <button class="activate-btn" id="activate-btn" disabled>
+          <i class="fas fa-check-circle"></i> Activate Subscription
+        </button>
+      </div>
+    </div>
+
+    <!-- Subscription Table Section -->
+    <div class="subscription-table-container">
+      <div class="table-header-actions">
+        <h2><i class="fas fa-table"></i> Subscription Records</h2>
+        <button class="generate-report-btn" id="generate-report-btn">
+          <i class="fas fa-file-export"></i> Generate Report
+        </button>
+      </div>
+      
+      <div class="filter-container">
+        <div class="filter-group">
+          <label for="filter-status">Status</label>
+          <select id="filter-status">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="expired">Expired</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="filter-plan">Plan Type</label>
+          <select id="filter-plan">
+            <option value="">All Plans</option>
+            <option value="basic">Basic</option>
+            <option value="standard">Standard</option>
+            <option value="premium">Premium</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="filter-search">Search</label>
+          <input type="text" id="filter-search" placeholder="Search by student name or ID">
+        </div>
+      </div>
+      
+      <div class="data-table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Student Name</th>
+              <th>Plan</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="subscription-table-body">
+            <!-- Table rows will be populated by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toast-message">Subscription activated successfully!</span>
+  </div>
+
+  <script>
+   const { jsPDF } = window.jspdf;
+    // Sample student data (in a real app, this would come from an API)
+    const students = [
+      { id: "S1001", name: "Rahul Sharma", email: "rahul@example.com", department: "Computer Science" },
+      { id: "S1002", name: "Priya Patel", email: "priya@example.com", department: "Electrical Engineering" },
+      { id: "S1003", name: "Amit Singh", email: "amit@example.com", department: "Mechanical Engineering" }
+    ];
+
+    // Subscription plans data
+    const plans = {
+      basic: {
+        name: "Basic Plan",
+        price: "₹500",
+        priceValue: 500,
+        duration: "1 month",
+        benefits: "Access to all books, 5 book limit, Standard borrowing period"
+      },
+      standard: {
+        name: "Standard Plan",
+        price: "₹800",
+        priceValue: 800,
+        duration: "1 month",
+        benefits: "Access to all books + premium section, 8 book limit, Extended borrowing period"
+      },
+      premium: {
+        name: "Premium Plan",
+        price: "₹1200",
+        priceValue: 1200,
+        duration: "1 month",
+        benefits: "Full access including new arrivals, 12 book limit, Extended borrowing period, Priority reservations"
+      }
+    };
+
+    // Sample subscription data
+    const subscriptions = [
+      { 
+        id: "SUB001", 
+        studentId: "S1001", 
+        studentName: "Rahul Sharma", 
+        plan: "premium", 
+        startDate: "2023-05-15", 
+        endDate: "2023-06-15", 
+        amount: 1200, 
+        status: "active",
+        paymentMethod: "cash",
+        transactionId: null
+      },
+      { 
+        id: "SUB002", 
+        studentId: "S1002", 
+        studentName: "Priya Patel", 
+        plan: "standard", 
+        startDate: "2023-05-20", 
+        endDate: "2023-06-20", 
+        amount: 800, 
+        status: "active",
+        paymentMethod: "transaction",
+        transactionId: "TXN789456"
+      },
+      { 
+        id: "SUB003", 
+        studentId: "S1003", 
+        studentName: "Amit Singh", 
+        plan: "basic", 
+        startDate: "2023-04-10", 
+        endDate: "2023-05-10", 
+        amount: 500, 
+        status: "expired",
+        paymentMethod: "cash",
+        transactionId: null
+      }
+    ];
+
+    // DOM elements
+    const studentSearch = document.getElementById('student-search');
+    const studentInfoContainer = document.getElementById('student-info-container');
+    const studentDetails = document.getElementById('student-details');
+    const subscriptionPlan = document.getElementById('subscription-plan');
+    const planDetailsContainer = document.getElementById('plan-details-container');
+    const planDetails = document.getElementById('plan-details');
+    const paymentMethod = document.getElementById('payment-method');
+    const paymentAmountContainer = document.getElementById('payment-amount-container');
+    const paymentAmount = document.getElementById('payment-amount');
+    const transactionInput = document.getElementById('transaction-input');
+    const transactionId = document.getElementById('transaction-id');
+    const activateBtn = document.getElementById('activate-btn');
+    const downloadBtn = document.getElementById('download-btn');
+    const generateReportBtn = document.getElementById('generate-report-btn');
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toast-message');
+    const subscriptionTableBody = document.getElementById('subscription-table-body');
+    const filterStatus = document.getElementById('filter-status');
+    const filterPlan = document.getElementById('filter-plan');
+    const filterSearch = document.getElementById('filter-search');
+
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', function() {
+      populateSubscriptionTable();
+      
+      // Add event listeners for filters
+      filterStatus.addEventListener('change', filterSubscriptions);
+      filterPlan.addEventListener('change', filterSubscriptions);
+      filterSearch.addEventListener('input', filterSubscriptions);
+      
+      // Add event listener for generate report button
+      generateReportBtn.addEventListener('click', generateReport);
+    });
+
+    // Search student functionality
+    studentSearch.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      if (searchTerm.length < 3) {
+        studentInfoContainer.style.display = 'none';
+        return;
+      }
+
+      const foundStudent = students.find(student => 
+        student.id.toLowerCase().includes(searchTerm) || 
+        student.name.toLowerCase().includes(searchTerm)
+      );
+
+      if (foundStudent) {
+        studentDetails.innerHTML = `
+          <p><strong>ID:</strong> ${foundStudent.id}</p>
+          <p><strong>Name:</strong> ${foundStudent.name}</p>
+          <p><strong>Email:</strong> ${foundStudent.email}</p>
+          <p><strong>Department:</strong> ${foundStudent.department}</p>
+        `;
+        studentInfoContainer.style.display = 'block';
+        checkFormCompletion();
+      } else {
+        studentInfoContainer.style.display = 'none';
+      }
+    });
+
+    // Subscription plan selection
+    subscriptionPlan.addEventListener('change', function() {
+      const selectedPlan = this.value;
+      
+      if (selectedPlan) {
+        const plan = plans[selectedPlan];
+        planDetails.innerHTML = `
+          <p><strong>Plan:</strong> ${plan.name}</p>
+          <p><strong>Price:</strong> ${plan.price}</p>
+          <p><strong>Duration:</strong> ${plan.duration}</p>
+          <p><strong>Benefits:</strong> ${plan.benefits}</p>
+        `;
+        planDetailsContainer.style.display = 'block';
+      } else {
+        planDetailsContainer.style.display = 'none';
+      }
+      
+      checkFormCompletion();
+    });
+
+    // Payment method selection
+    paymentMethod.addEventListener('change', function() {
+      const method = this.value;
+      transactionInput.style.display = method === 'transaction' ? 'block' : 'none';
+      
+      // Show payment amount if plan is selected
+      if (subscriptionPlan.value && method) {
+        const plan = plans[subscriptionPlan.value];
+        paymentAmount.innerHTML = `
+          <p><strong>Amount to Pay:</strong> ${plan.price}</p>
+        `;
+        paymentAmountContainer.style.display = 'block';
+      } else {
+        paymentAmountContainer.style.display = 'none';
+      }
+      
+      checkFormCompletion();
+    });
+
+    // Transaction ID input
+    transactionId.addEventListener('input', function() {
+      checkFormCompletion();
+    });
+
+    // Check if form is complete to enable activate button
+    function checkFormCompletion() {
+      const studentSelected = studentInfoContainer.style.display === 'block';
+      const planSelected = subscriptionPlan.value !== '';
+      const paymentSelected = paymentMethod.value !== '';
+      const transactionValid = paymentMethod.value !== 'transaction' || 
+                             (paymentMethod.value === 'transaction' && 
+                              transactionId.value.trim() !== '');
+      
+      activateBtn.disabled = !(studentSelected && planSelected && paymentSelected && transactionValid);
+      downloadBtn.disabled = !(studentSelected && planSelected && paymentSelected && transactionValid);
+    }
+
+    // Activate subscription
+    activateBtn.addEventListener('click', function() {
+      // Get student details
+      const searchTerm = studentSearch.value.toLowerCase();
+      const student = students.find(s => 
+        s.id.toLowerCase().includes(searchTerm) || 
+        s.name.toLowerCase().includes(searchTerm)
+      );
+      
+      // Create new subscription
+      const newSubscription = {
+        id: 'SUB' + Math.floor(1000 + Math.random() * 9000),
+        studentId: student.id,
+        studentName: student.name,
+        plan: subscriptionPlan.value,
+        startDate: new Date().toISOString().split('T')[0],
+        endDate: getEndDate(new Date(), 1), // 1 month duration
+        amount: plans[subscriptionPlan.value].priceValue,
+        status: "active",
+        paymentMethod: paymentMethod.value,
+        transactionId: paymentMethod.value === 'transaction' ? transactionId.value : null
+      };
+      
+      // Add to subscriptions array
+      subscriptions.unshift(newSubscription);
+      
+      // Update table
+      populateSubscriptionTable();
+      
+      // Show success message
+      showToast('Subscription activated successfully!');
+      
+      // Reset form
+      resetForm();
+    });
+
+    // Download receipt in PDF format
+    downloadBtn.addEventListener('click', function() {
+      // Get student details
+      const searchTerm = studentSearch.value.toLowerCase();
+      const student = students.find(s => 
+        s.id.toLowerCase().includes(searchTerm) || 
+        s.name.toLowerCase().includes(searchTerm)
+      );
+      
+      if (!student) {
+        showToast('Student not found!', true);
+        return;
+      }
+      
+      // Create PDF document
+      const doc = new jsPDF();
+      
+      // Add header
+      doc.setFontSize(20);
+      doc.setTextColor(40, 53, 147);
+      doc.text('GP LIBRARY', 105, 20, { align: 'center' });
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0);
+      doc.text('Subscription Receipt', 105, 30, { align: 'center' });
+      
+      // Add receipt details
+      doc.setFontSize(12);
+      doc.text(`Receipt No: SUB-${Math.floor(1000 + Math.random() * 9000)}`, 20, 45);
+      doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 55);
+      
+      // Add student information
+      doc.setFontSize(14);
+      doc.setTextColor(40, 53, 147);
+      doc.text('Student Information', 20, 70);
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Name: ${student.name}`, 20, 80);
+      doc.text(`ID: ${student.id}`, 20, 90);
+      doc.text(`Department: ${student.department}`, 20, 100);
+      
+      // Add subscription details
+      doc.setFontSize(14);
+      doc.setTextColor(40, 53, 147);
+      doc.text('Subscription Details', 20, 120);
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      const plan = plans[subscriptionPlan.value];
+      doc.text(`Plan: ${plan.name}`, 20, 130);
+      doc.text(`Duration: ${plan.duration}`, 20, 140);
+      doc.text(`Amount: ${plan.price}`, 20, 150);
+      doc.text(`Payment Method: ${paymentMethod.value === 'cash' ? 'Cash' : 'Transaction (ID: ' + transactionId.value + ')'}`, 20, 160);
+      
+      // Add footer
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text('Thank you for your subscription!', 105, 190, { align: 'center' });
+      
+      // Save the PDF
+      doc.save(`subscription_receipt_${student.name.replace(' ', '_')}.pdf`);
+      
+      showToast('Receipt downloaded successfully!');
+    });
+
+    // Generate report in PDF format
+    function generateReport() {
+      // Get filtered data or all data
+      const filteredData = getFilteredSubscriptions();
+      
+      // Create PDF document
+      const doc = new jsPDF();
+      
+      // Add header
+      doc.setFontSize(20);
+      doc.setTextColor(40, 53, 147);
+      doc.text('GP LIBRARY', 105, 20, { align: 'center' });
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      doc.text('Monthly Subscription Report', 105, 30, { align: 'center' });
+      
+      // Add report details
+      doc.setFontSize(12);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 45);
+      doc.text(`Total Subscriptions: ${filteredData.length}`, 20, 55);
+      
+      // Add summary statistics
+      const activeCount = filteredData.filter(sub => sub.status === 'active').length;
+      const expiredCount = filteredData.filter(sub => sub.status === 'expired').length;
+      const pendingCount = filteredData.filter(sub => sub.status === 'pending').length;
+      
+      doc.setFontSize(14);
+      doc.setTextColor(40, 53, 147);
+      doc.text('Status Summary', 20, 70);
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Active: ${activeCount}`, 20, 80);
+      doc.text(`Expired: ${expiredCount}`, 20, 90);
+      doc.text(`Pending: ${pendingCount}`, 20, 100);
+      
+      // Add plan statistics
+      const basicCount = filteredData.filter(sub => sub.plan === 'basic').length;
+      const standardCount = filteredData.filter(sub => sub.plan === 'standard').length;
+      const premiumCount = filteredData.filter(sub => sub.plan === 'premium').length;
+      
+      doc.setFontSize(14);
+      doc.setTextColor(40, 53, 147);
+      doc.text('Plan Summary', 20, 120);
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Basic: ${basicCount}`, 20, 130);
+      doc.text(`Standard: ${standardCount}`, 20, 140);
+      doc.text(`Premium: ${premiumCount}`, 20, 150);
+      
+      // Add total revenue
+      const totalRevenue = filteredData.reduce((sum, sub) => sum + sub.amount, 0);
+      doc.setFontSize(14);
+      doc.setTextColor(40, 53, 147);
+      doc.text('Financial Summary', 20, 170);
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Total Revenue: ₹${totalRevenue}`, 20, 180);
+      
+      // Add detailed records table
+      doc.setFontSize(14);
+      doc.setTextColor(40, 53, 147);
+      doc.text('Detailed Records', 20, 200);
+      
+      // Prepare data for the table
+      const tableData = filteredData.map(sub => [
+        sub.id,
+        sub.studentId,
+        sub.studentName,
+        plans[sub.plan].name,
+        `₹${sub.amount}`,
+        sub.status.charAt(0).toUpperCase() + sub.status.slice(1),
+        new Date(sub.startDate).toLocaleDateString(),
+        new Date(sub.endDate).toLocaleDateString()
+      ]);
+      
+      // Add the table
+      doc.autoTable({
+        startY: 210,
+        head: [['ID', 'Student ID', 'Name', 'Plan', 'Amount', 'Status', 'Start Date', 'End Date']],
+        body: tableData,
+        margin: { top: 210 },
+        styles: {
+          fontSize: 8,
+          cellPadding: 3,
+          overflow: 'linebreak'
+        },
+        headStyles: {
+          fillColor: [40, 53, 147],
+          textColor: 255
+        }
+      });
+      
+      // Save the PDF
+      doc.save(`subscription_report_${new Date().toISOString().split('T')[0]}.pdf`);
+      
+      showToast('Report generated successfully!');
+    }
+    // Get filtered subscriptions based on current filters
+    function getFilteredSubscriptions() {
+      const statusFilter = filterStatus.value;
+      const planFilter = filterPlan.value;
+      const searchFilter = filterSearch.value.toLowerCase();
+      
+      return subscriptions.filter(sub => {
+        // Status filter
+        if (statusFilter && sub.status !== statusFilter) return false;
+        
+        // Plan filter
+        if (planFilter && sub.plan !== planFilter) return false;
+        
+        // Search filter
+        if (searchFilter && 
+            !sub.studentId.toLowerCase().includes(searchFilter) && 
+            !sub.studentName.toLowerCase().includes(searchFilter)) {
+          return false;
+        }
+        
+        return true;
+      });
+    }
+
+    // Populate subscription table
+    function populateSubscriptionTable(filteredData = null) {
+      const data = filteredData || subscriptions;
+      subscriptionTableBody.innerHTML = '';
+      
+      data.forEach(sub => {
+        const row = document.createElement('tr');
+        
+        // Format dates
+        const startDate = new Date(sub.startDate).toLocaleDateString();
+        const endDate = new Date(sub.endDate).toLocaleDateString();
+        
+        // Determine status badge
+        let statusBadge;
+        if (sub.status === 'active') {
+          statusBadge = `<span class="status-badge active">Active</span>`;
+        } else if (sub.status === 'expired') {
+          statusBadge = `<span class="status-badge expired">Expired</span>`;
+        } else {
+          statusBadge = `<span class="status-badge pending">Pending</span>`;
+        }
+        
+        row.innerHTML = `
+          <td>${sub.studentId}</td>
+          <td>${sub.studentName}</td>
+          <td>${plans[sub.plan].name}</td>
+          <td>${startDate}</td>
+          <td>${endDate}</td>
+          <td>₹${sub.amount}</td>
+          <td>${statusBadge}</td>
+          <td>
+            <button class="action-btn view" onclick="viewSubscription('${sub.id}')">
+              <i class="fas fa-eye"></i> View
+            </button>
+            <button class="action-btn renew" onclick="renewSubscription('${sub.id}')">
+              <i class="fas fa-sync-alt"></i> Renew
+            </button>
+          </td>
+        `;
+        
+        subscriptionTableBody.appendChild(row);
+      });
+    }
+
+    // Filter subscriptions
+    function filterSubscriptions() {
+      const filtered = getFilteredSubscriptions();
+      populateSubscriptionTable(filtered);
+    }
+
+    // View subscription details
+    function viewSubscription(id) {
+      const sub = subscriptions.find(s => s.id === id);
+      if (sub) {
+        alert(`Subscription Details:\n\nStudent: ${sub.studentName} (${sub.studentId})\nPlan: ${plans[sub.plan].name}\nAmount: ₹${sub.amount}\nStatus: ${sub.status}\nStart Date: ${sub.startDate}\nEnd Date: ${sub.endDate}\nPayment Method: ${sub.paymentMethod === 'cash' ? 'Cash' : 'Transaction (ID: ' + sub.transactionId + ')'}`);
+      }
+    }
+
+    // Renew subscription
+    function renewSubscription(id) {
+      const sub = subscriptions.find(s => s.id === id);
+      if (sub) {
+        if (confirm(`Renew subscription for ${sub.studentName} (${sub.studentId})?\nPlan: ${plans[sub.plan].name}\nAmount: ₹${sub.amount}`)) {
+          // Update the subscription
+          const today = new Date();
+          sub.startDate = today.toISOString().split('T')[0];
+          sub.endDate = getEndDate(today, 1); // Renew for 1 month
+          sub.status = "active";
+          
+          // Update table
+          populateSubscriptionTable();
+          
+          showToast('Subscription renewed successfully!');
+        }
+      }
+    }
+
+    // Helper function to calculate end date
+    function getEndDate(startDate, months) {
+      const date = new Date(startDate);
+      date.setMonth(date.getMonth() + months);
+      return date.toISOString().split('T')[0];
+    }
+
+    // Show toast notification
+    function showToast(message, isError = false) {
+      toastMessage.textContent = message;
+      toast.className = isError ? 'toast error show' : 'toast show';
+      
+      setTimeout(() => {
+        toast.className = 'toast';
+      }, 3000);
+    }
+
+    // Reset form
+    function resetForm() {
+      studentSearch.value = '';
+      studentInfoContainer.style.display = 'none';
+      subscriptionPlan.value = '';
+      planDetailsContainer.style.display = 'none';
+      paymentMethod.value = '';
+      paymentAmountContainer.style.display = 'none';
+      transactionInput.style.display = 'none';
+      transactionId.value = '';
+      activateBtn.disabled = true;
+      downloadBtn.disabled = true;
+    }
+
+    // Dropdown functionality for sidebar buttons
+    document.querySelectorAll('.sidebar-btn.dropdown').forEach(button => {
+      button.addEventListener('click', function() {
+        this.classList.toggle('active');
+      });
+    });
+  </script>
+</body>
+</html>

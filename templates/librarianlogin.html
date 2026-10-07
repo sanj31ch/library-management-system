@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Library Management</title>
+  <link rel="stylesheet" href="{{url_for('static',filename='style.css')}}">
+  
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-glass">
+      <!-- Back Button -->
+      <button class="back-btn" onclick="window.history.back()">
+        &larr; Back
+      </button>
+      
+      <div class="login-header">
+        <img src="https://cdn-icons-png.flaticon.com/512/2232/2232688.png" alt="Library Icon" class="logo">
+        <h1>GP Library Management</h1>
+        <p>Librarian Login Portal</p>
+      </div>
+      
+      <form class="login-form" id="lform">
+        <div class="input-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" placeholder="Enter your username" required>
+          <i class="icon">👤</i>
+        </div>
+        
+        <div class="input-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter your password" required>
+          <i class="icon">🔒</i>
+        </div>
+        
+        <button type="submit" class="login-btn" onclick="check()">Login</button>
+      </form>
+      
+      <div class="login-footer">
+        <p id="status" style="color: red;"></p>
+        <p>Forgot your password? <a href="#">Contact Admin</a></p>
+        <p>Don't have an account? <a href="#">Contact Admin</a></p>
+      </div>
+    </div>
+  </div>
+  <script>
+    document.getElementById('lform').addEventListener("submit",function(e){
+      e.preventDefault();
+    })
+    function check(){
+        let user=document.getElementById('username').value;
+        let pass=document.getElementById('password').value;
+        if (user=='' || pass=='') {
+          document.getElementById("status").innerText='Please Enter details';
+          document.getElementById("status").style.color='red';
+          return
+        }
+        fetch('/llog',{
+          method:'post',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({
+            username:user,
+            password:pass
+          })
+        })
+        .then(response=>response.json())
+        .then(data=>{
+          let status=data;
+          if (status=='Valid') {
+            window.location.href='/libhome';
+          }
+          if (status=='Invalid') {
+            document.getElementById("status").innerText='Invalid Username or Password';
+            document.getElementById("status").style.color='red';
+          }
+        })
+    }
+  </script>
+</body>
+</html>

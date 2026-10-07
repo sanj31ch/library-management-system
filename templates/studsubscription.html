@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Dashboard - Library Management</title>
+  <link rel="stylesheet" href="{{url_for('static',filename='styless.css')}}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Main content styles */
+    .main-content {
+      margin-left: 250px;
+      padding: 20px;
+      color: white;
+      min-height: 100vh;
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+
+    /* Subscription Section Styles */
+    .subscription-section {
+      margin-bottom: 40px;
+    }
+
+    .subscription-section h2 {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: white;
+    }
+
+    .subscription-section h2 i {
+      color: #4fc3f7;
+    }
+
+    .active-subscription {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      margin-bottom: 20px;
+    }
+
+    .subscription-card {
+      position: relative;
+    }
+
+    .subscription-details {
+      margin-top: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 15px;
+    }
+
+    .detail-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
+    }
+
+    .detail-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .cancel-subscription-btn {
+      width: 100%;
+      padding: 12px;
+      background: rgba(244, 67, 54, 0.8);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cancel-subscription-btn:hover {
+      background: rgba(244, 67, 54, 1);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(244, 67, 54, 0.3);
+    }
+
+    /* Payment Methods */
+    .payment-methods {
+      margin-top: 20px;
+    }
+
+    .payment-methods h3 {
+      font-size: 1.2rem;
+      margin-bottom: 15px;
+      color: white;
+    }
+
+    .payment-options {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .payment-option-btn {
+      padding: 10px 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 6px;
+      color: white;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .payment-option-btn.active {
+      background: rgba(94, 114, 235, 0.8);
+      border-color: rgba(94, 114, 235, 0.8);
+    }
+
+    .payment-option-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .payment-method-content {
+      display: none;
+    }
+
+    .qr-code-container {
+      text-align: center;
+      margin: 20px 0;
+    }
+
+    .qr-code-container img {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      max-width: 200px;
+      margin: 0 auto;
+    }
+
+    .qr-code-container p {
+      margin-top: 15px;
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    /* Download Receipt Buttons */
+    .download-receipt-btn {
+      padding: 8px 15px;
+      background: rgba(94, 114, 235, 0.8);
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+    }
+
+    .download-receipt-btn:hover {
+      background: rgba(94, 114, 235, 1);
+      transform: translateY(-2px);
+    }
+
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background-color: #1a1a2e;
+      padding: 30px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 500px;
+      position: relative;
+      color: white;
+    }
+
+    .close-modal {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      font-size: 24px;
+      cursor: pointer;
+      color: #ccc;
+    }
+
+    .close-modal:hover {
+      color: white;
+    }
+
+    /* Navigation Tabs */
+    .subscription-tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .subscription-tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .subscription-tab.active {
+      border-bottom: 2px solid #4fc3f7;
+      color: #4fc3f7;
+    }
+
+    .subscription-tab:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .subscription-tab-content {
+      display: none;
+    }
+
+    .subscription-tab-content.active {
+      display: block;
+    }
+
+    /* Renew Button */
+    .renew-subscription-btn {
+      width: 100%;
+      padding: 12px;
+      background: rgba(76, 175, 80, 0.8);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .renew-subscription-btn:hover {
+      background: rgba(76, 175, 80, 1);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .main-content {
+        margin-left: 0;
+        padding: 20px 10px;
+      }
+      
+      .payment-options {
+        flex-direction: column;
+      }
+      
+      .payment-option-btn {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .plan-card {
+        max-width: 100%;
+      }
+      
+      .subscription-plans {
+        flex-direction: column;
+      }
+
+      .subscription-tabs {
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .modal-content {
+        padding: 20px;
+      }
+      
+      .detail-item {
+        flex-direction: column;
+        gap: 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="blur-bg"></div>
+
+  <!-- Sidebar -->
+ <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-book-open"></i> GP LIBRARY
+        </div>
+        <button class="sidebar-btn" id="profileBtn" onclick="window.location.href='/students'">
+            <i class="fas fa-user-graduate"></i> <span>View Profile</span>
+        </button>
+        <button class="sidebar-btn" id="attendanceBtn" onclick="window.location.href='/students'">
+            <i class="fas fa-calendar-alt"></i> <span>Borrowing History</span>
+        </button>
+        <button class="sidebar-btn" id="booksBtn" onclick="window.location.href='/students'">
+            <i class="fas fa-book"></i> <span>View Books</span>
+        </button>
+        <button class="sidebar-btn" id="issueBookBtn" onclick="window.location.href='/students'">
+            <i class="fas fa-hand-holding-heart"></i> <span>Issue Book</span>
+        </button>
+        <button class="sidebar-btn" id="notificationsBtn" onclick="window.location.href='/students'">
+            <i class="fas fa-bell"></i> <span>Notifications</span>
+            <span class="notification-badge" id="notificationBadge">0</span>
+        </button>
+        <button class="sidebar-btn " id="logoutBtn" onclick="window.location.href='/studsubscription'">
+            <i class="fas fa-sign-out-alt"></i> <span>Subscription</span>
+        </button>
+        <button class="sidebar-btn logout-btn" id="logoutBtn" onclick="window.location.href='/'">
+            <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+        </button>
+    </div>
+
+  <!-- Main content -->
+  <div class="main-content" id="mainContent">
+    <div class="view-container subscription-view">
+      <h1>Subscription Management</h1>
+      
+      <!-- Subscription Tabs -->
+      <div class="subscription-tabs">
+        <div class="subscription-tab active" data-tab="active">Active Subscription</div>
+        <div class="subscription-tab" data-tab="plans">Subscription Plans</div>
+        <div class="subscription-tab" data-tab="history">Subscription History</div>
+      </div>
+      
+      <!-- Active Subscription Section -->
+      <div class="subscription-tab-content active" id="activeTab">
+        <div class="subscription-section">
+          <h2><i class="fas fa-id-card"></i> Your Active Subscription</h2>
+          <div class="active-subscription">
+            <div class="subscription-card">
+              <div class="plan-header">
+                <h3 class="premium-plan">Premium Plan</h3>
+                <div class="plan-price">₹199 <span>/month</span></div>
+                <div class="plan-savings">Save 20% compared to monthly</div>
+              </div>
+              <ul class="plan-features">
+                <li><i class="fas fa-check"></i> Unlimited book borrowing</li>
+                <li><i class="fas fa-check"></i> Priority access to new arrivals</li>
+                <li><i class="fas fa-check"></i> Extended loan periods (21 days)</li>
+                <li><i class="fas fa-check"></i> 5 reserved books at a time</li>
+                <li><i class="fas fa-check"></i> No late fees</li>
+              </ul>
+              <div class="subscription-details">
+                <div class="detail-item">
+                  <span>Started:</span>
+                  <span>15 June 2023</span>
+                </div>
+                <div class="detail-item">
+                  <span>Renews:</span>
+                  <span>15 July 2023</span>
+                </div>
+                <div class="detail-item">
+                  <span>Status:</span>
+                  <span class="status-active">Active</span>
+                </div>
+              </div>
+              <button class="renew-subscription-btn" id="renewSubscriptionBtn">
+                <i class="fas fa-sync-alt"></i> Renew Subscription
+              </button>
+              <button class="cancel-subscription-btn">
+                <i class="fas fa-times-circle"></i> Cancel Subscription
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Subscription Plans Section -->
+      <div class="subscription-tab-content" id="plansTab">
+        <div class="subscription-section">
+          <h2><i class="fas fa-crown"></i> Available Plans</h2>
+          <div class="subscription-info">
+            Choose a plan that fits your reading habits. Upgrade or change your plan anytime.
+          </div>
+          <div class="subscription-plans">
+            <!-- Basic Plan -->
+            <div class="plan-card">
+              <div class="plan-header">
+                <h3 class="basic-plan">Basic Plan</h3>
+                <div class="plan-price">₹99 <span>/month</span></div>
+              </div>
+              <ul class="plan-features">
+                <li><i class="fas fa-check"></i> 3 books at a time</li>
+                <li><i class="fas fa-check"></i> Standard loan periods (14 days)</li>
+                <li><i class="fas fa-check"></i> 2 reserved books at a time</li>
+                <li><i class="fas fa-times"></i> No priority access</li>
+                <li><i class="fas fa-times"></i> Regular late fees apply</li>
+              </ul>
+              <button class="plan-btn upgrade-btn" data-plan="basic">
+                <i class="fas fa-shopping-cart"></i> Select Plan
+              </button>
+            </div>
+            
+            <!-- Premium Plan (Highlighted) -->
+            <div class="plan-card highlight-plan premium-plan-card">
+              <div class="recommended-badge">Recommended</div>
+              <div class="plan-header">
+                <h3 class="premium-plan">Premium Plan</h3>
+                <div class="plan-price">₹199 <span>/month</span></div>
+                <div class="plan-savings">Save 20% compared to monthly</div>
+              </div>
+              <ul class="plan-features">
+                <li><i class="fas fa-check"></i> Unlimited book borrowing</li>
+                <li><i class="fas fa-check"></i> Priority access to new arrivals</li>
+                <li><i class="fas fa-check"></i> Extended loan periods (21 days)</li>
+                <li><i class="fas fa-check"></i> 5 reserved books at a time</li>
+                <li><i class="fas fa-check"></i> No late fees</li>
+              </ul>
+              <button class="plan-btn upgrade-btn" data-plan="premium">
+                <i class="fas fa-shopping-cart"></i> Select Plan
+              </button>
+            </div>
+            
+            <!-- Annual Plan -->
+            <div class="plan-card">
+              <div class="plan-header">
+                <h3 class="annual-plan">Annual Plan</h3>
+                <div class="plan-price">₹999 <span>/year</span></div>
+                <div class="plan-savings">Save 30% compared to monthly</div>
+              </div>
+              <ul class="plan-features">
+                <li><i class="fas fa-check"></i> Unlimited book borrowing</li>
+                <li><i class="fas fa-check"></i> Priority access to new arrivals</li>
+                <li><i class="fas fa-check"></i> Extended loan periods (28 days)</li>
+                <li><i class="fas fa-check"></i> 10 reserved books at a time</li>
+                <li><i class="fas fa-check"></i> No late fees + Free delivery</li>
+              </ul>
+              <button class="plan-btn upgrade-btn" data-plan="annual">
+                <i class="fas fa-shopping-cart"></i> Select Plan
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Payment History Section -->
+      <div class="subscription-tab-content" id="historyTab">
+        <div class="subscription-section">
+          <h2><i class="fas fa-history"></i> Payment History</h2>
+          <div class="subscription-history">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Plan</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Receipt</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>15 Jun 2023</td>
+                  <td>Premium Monthly</td>
+                  <td>₹199.00</td>
+                  <td class="status-active">Completed</td>
+                  <td><button class="download-receipt-btn" data-receipt-id="1"><i class="fas fa-download"></i> Download</button></td>
+                </tr>
+                <tr>
+                  <td>15 May 2023</td>
+                  <td>Premium Monthly</td>
+                  <td>₹199.00</td>
+                  <td class="status-active">Completed</td>
+                  <td><button class="download-receipt-btn" data-receipt-id="2"><i class="fas fa-download"></i> Download</button></td>
+                </tr>
+                <tr>
+                  <td>15 Apr 2023</td>
+                  <td>Basic Monthly</td>
+                  <td>₹99.00</td>
+                  <td class="status-active">Completed</td>
+                  <td><button class="download-receipt-btn" data-receipt-id="3"><i class="fas fa-download"></i> Download</button></td>
+                </tr>
+                <tr>
+                  <td>15 Mar 2023</td>
+                  <td>Basic Monthly</td>
+                  <td>₹99.00</td>
+                  <td class="status-expired">Expired</td>
+                  <td><button class="download-receipt-btn" data-receipt-id="4"><i class="fas fa-download"></i> Download</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Modal -->
+  <div class="modal" id="paymentModal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2>Complete Your Subscription</h2>
+      <div class="payment-section">
+        <div class="payment-summary">
+          <div class="summary-item">
+            <span>Selected Plan:</span>
+            <span id="selectedPlanText">Premium Monthly</span>
+          </div>
+          <div class="summary-item">
+            <span>Amount:</span>
+            <span id="selectedAmount">₹199.00</span>
+          </div>
+          <div class="summary-item total">
+            <span>Total:</span>
+            <span id="totalAmount">₹199.00</span>
+          </div>
+        </div>
+        
+        <div class="payment-methods">
+          <h3>Payment Method</h3>
+          <div class="payment-options">
+            <center><button class="payment-option-btn active" data-method="phonepe">
+              <i class="fas fa-mobile-alt"></i>Show QR
+            </button> </center>
+          </div>
+        </div>
+        
+        <!-- PhonePe QR Code -->
+        <div class="payment-method-content" id="phonepeContent">
+          <div class="qr-code-container">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa=8956321760@ybl&pn=GP%20Library&am=99.00&cu=INR" alt="PhonePe QR Code">
+            <p>Scan this QR code with PhonePe to complete payment</p>
+
+            <!-- Back Button to hide QR and show plan section -->
+            <button class="download-receipt-btn" id="backToPlansBtn">
+              <i class="fas fa-arrow-left"></i> Back to Plans
+            </button>
+          </div>
+
+          <!-- Confirm Payment -->
+          <button class="pay-now-btn" id="confirmPhonePePayment">
+            <i class="fas fa-check-circle"></i> I've made the payment
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Success Modal -->
+  <div class="modal" id="successModal">
+    <div class="modal-content">
+      <div class="payment-success-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h2>Payment Successful!</h2>
+      <p>Thank you for your subscription payment.</p>
+      
+      <div class="payment-success-details">
+        <p>
+          <span>Plan:</span>
+          <span id="successPlanName">Premium Monthly</span>
+        </p>
+        <p>
+          <span>Amount:</span>
+          <span id="successAmount">₹199.00</span>
+        </p>
+        <p>
+          <span>Transaction ID:</span>
+          <span>TXN789456123</span>
+        </p>
+        <p>
+          <span>Date:</span>
+          <span id="successDate">15 July 2023, 14:30</span>
+        </p>
+      </div>
+      
+      <button class="success-close-btn" id="closeSuccessModal">
+        <i class="fas fa-thumbs-up"></i> Great!
+      </button>
+      
+      <button class="download-receipt-btn" id="downloadSuccessReceipt">
+        <i class="fas fa-download"></i> Download Receipt
+      </button>
+    </div>
+  </div>
+
+  <!-- Cancel Subscription Modal -->
+  <div class="modal" id="cancelModal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2>Cancel Subscription</h2>
+      <p>Are you sure you want to cancel your current subscription?</p>
+      
+      <div class="subscription-details">
+        <div class="detail-item">
+          <span>Plan:</span>
+          <span>Premium Monthly</span>
+        </div>
+        <div class="detail-item">
+          <span>Valid Until:</span>
+          <span>15 July 2023</span>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button class="cancel-btn" id="closeCancelModal">
+          <i class="fas fa-times"></i> No, Keep It
+        </button>
+        <button class="save-btn" id="confirmCancelSubscription">
+          <i class="fas fa-check"></i> Yes, Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Receipt Modal -->
+  <div class="modal" id="receiptModal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2>Payment Receipt</h2>
+      <div class="receipt-content" id="receiptContent">
+        <!-- Receipt content will be generated here -->
+      </div>
+      <button class="download-receipt-btn" id="downloadGeneratedReceipt">
+        <i class="fas fa-download"></i> Download Receipt
+      </button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Tab switching functionality
+      const tabs = document.querySelectorAll('.subscription-tab');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+          // Remove active class from all tabs and contents
+          document.querySelectorAll('.subscription-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.subscription-tab-content').forEach(c => c.classList.remove('active'));
+          
+          // Add active class to clicked tab and corresponding content
+          this.classList.add('active');
+          const tabId = this.getAttribute('data-tab') + 'Tab';
+          document.getElementById(tabId).classList.add('active');
+        });
+      });
+
+      // Renew subscription button - redirect to plans tab
+      const renewBtn = document.getElementById('renewSubscriptionBtn');
+      if (renewBtn) {
+        renewBtn.addEventListener('click', function() {
+          // Switch to plans tab
+          document.querySelectorAll('.subscription-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.subscription-tab-content').forEach(c => c.classList.remove('active'));
+          
+          document.querySelector('.subscription-tab[data-tab="plans"]').classList.add('active');
+          document.getElementById('plansTab').classList.add('active');
+          
+          // Scroll to plans section
+          document.getElementById('plansTab').scrollIntoView({ behavior: 'smooth' });
+        });
+      }
+
+      // Handle all close buttons
+      document.querySelectorAll('.close-modal').forEach(btn => {
+        btn.addEventListener('click', function() {
+          btn.closest('.modal').style.display = 'none';
+          if (btn.closest('#paymentModal')) {
+            document.getElementById('phonepeContent').style.display = 'none';
+            const note = document.querySelector('#phonepeContent .librarian-note');
+            if (note) note.remove();
+            document.querySelectorAll('.payment-option-btn').forEach(btn => {
+              btn.classList.remove('active');
+            });
+          }
+        });
+      });
+
+      // Plan selection and payment modal
+      const upgradeButtons = document.querySelectorAll('.upgrade-btn');
+      const paymentModal = document.getElementById('paymentModal');
+      const selectedPlanText = document.getElementById('selectedPlanText');
+      const selectedAmount = document.getElementById('selectedAmount');
+      const totalAmount = document.getElementById('totalAmount');
+
+      upgradeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const plan = this.getAttribute('data-plan');
+          let planName = '';
+          let amount = '';
+
+          switch (plan) {
+            case 'basic':
+              planName = 'Basic Monthly';
+              amount = '₹99.00';
+              break;
+            case 'premium':
+              planName = 'Premium Monthly';
+              amount = '₹199.00';
+              break;
+            case 'annual':
+              planName = 'Annual Plan';
+              amount = '₹999.00';
+              break;
+          }
+
+          selectedPlanText.textContent = planName;
+          selectedAmount.textContent = amount;
+          totalAmount.textContent = amount;
+
+          paymentModal.style.display = 'flex';
+        });
+      });
+
+      // Payment options
+      const paymentOptions = document.querySelectorAll('.payment-option-btn');
+      const phonepeContent = document.getElementById('phonepeContent');
+
+      paymentOptions.forEach(option => {
+        option.addEventListener('click', function() {
+          paymentOptions.forEach(btn => btn.classList.remove('active'));
+          this.classList.add('active');
+          phonepeContent.style.display = 'none';
+
+          const method = this.getAttribute('data-method');
+          if (method === 'phonepe') {
+            phonepeContent.style.display = 'block';
+          }
+        });
+      });
+
+      // Confirm PhonePe payment
+      const confirmPhonePePayment = document.getElementById('confirmPhonePePayment');
+      if (confirmPhonePePayment) {
+        confirmPhonePePayment.addEventListener('click', function() {
+          if (!document.querySelector('#phonepeContent .librarian-note')) {
+            const librarianNote = document.createElement('div');
+            librarianNote.className = 'librarian-note';
+            librarianNote.style.marginTop = '20px';
+            librarianNote.style.padding = '15px';
+            librarianNote.style.background = 'rgba(255, 255, 255, 0.08)';
+            librarianNote.style.border = '1px dashed #66BB6A';
+            librarianNote.style.borderRadius = '8px';
+            librarianNote.style.fontWeight = '500';
+            librarianNote.style.textAlign = 'center';
+            librarianNote.style.color = 'white';
+            librarianNote.innerHTML = `
+              <i class="fas fa-info-circle" style="color: #4FC3F7; margin-right: 8px;"></i>
+              Please <strong>go to the librarian</strong>, show your <strong>payment screenshot</strong>, and confirm your subscription.
+            `;
+
+            document.getElementById('phonepeContent').appendChild(librarianNote);
+          }
+        });
+      }
+
+      // Back to Plan button
+      const backToPlansBtn = document.getElementById('backToPlansBtn');
+      if (backToPlansBtn) {
+        backToPlansBtn.addEventListener('click', function() {
+          document.getElementById('phonepeContent').style.display = 'none';
+          const note = document.querySelector('#phonepeContent .librarian-note');
+          if (note) note.remove();
+          document.querySelectorAll('.payment-option-btn').forEach(btn => btn.classList.remove('active'));
+        });
+      }
+
+      // Cancel subscription modal
+      const cancelSubscriptionBtn = document.querySelector('.cancel-subscription-btn');
+      const cancelModal = document.getElementById('cancelModal');
+      const confirmCancelSubscription = document.getElementById('confirmCancelSubscription');
+
+      if (cancelSubscriptionBtn) {
+        cancelSubscriptionBtn.addEventListener('click', function() {
+          cancelModal.style.display = 'flex';
+        });
+      }
+
+      if (confirmCancelSubscription) {
+        confirmCancelSubscription.addEventListener('click', function() {
+          // Here you would typically send a request to your backend to cancel the subscription
+          alert('Your subscription has been cancelled successfully.');
+          cancelModal.style.display = 'none';
+          
+          // Update the UI to show subscription is cancelled
+          document.querySelector('.status-active').textContent = 'Cancelled';
+          document.querySelector('.status-active').className = 'status-expired';
+          document.querySelector('.cancel-subscription-btn').style.display = 'none';
+        });
+      }
+
+      // Close cancel modal
+      const closeCancelModal = document.getElementById('closeCancelModal');
+      if (closeCancelModal) {
+        closeCancelModal.addEventListener('click', function() {
+          cancelModal.style.display = 'none';
+        });
+      }
+
+      // Download receipt functionality
+      const downloadReceiptButtons = document.querySelectorAll('.download-receipt-btn[data-receipt-id]');
+      const receiptModal = document.getElementById('receiptModal');
+      const receiptContent = document.getElementById('receiptContent');
+
+      downloadReceiptButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const receiptId = this.getAttribute('data-receipt-id');
+          
+          // Generate receipt content based on receipt ID
+          let receiptData = {};
+          switch(receiptId) {
+            case '1':
+              receiptData = {
+                date: '15 June 2023',
+                plan: 'Premium Monthly',
+                amount: '₹199.00',
+                transactionId: 'TXN789456123',
+                status: 'Completed'
+              };
+              break;
+            case '2':
+              receiptData = {
+                date: '15 May 2023',
+                plan: 'Premium Monthly',
+                amount: '₹199.00',
+                transactionId: 'TXN789456124',
+                status: 'Completed'
+              };
+              break;
+            case '3':
+              receiptData = {
+                date: '15 April 2023',
+                plan: 'Basic Monthly',
+                amount: '₹99.00',
+                transactionId: 'TXN789456125',
+                status: 'Completed'
+              };
+              break;
+            case '4':
+              receiptData = {
+                date: '15 March 2023',
+                plan: 'Basic Monthly',
+                amount: '₹99.00',
+                transactionId: 'TXN789456126',
+                status: 'Expired'
+              };
+              break;
+          }
+          
+          // Generate receipt HTML
+          receiptContent.innerHTML = `
+            <div class="receipt-header">
+              <h3>GP Library</h3>
+              <p>Subscription Payment Receipt</p>
+            </div>
+            <div class="receipt-details">
+              <div class="detail-item">
+                <span>Receipt ID:</span>
+                <span>RCPT${receiptId.padStart(6, '0')}</span>
+              </div>
+              <div class="detail-item">
+                <span>Date:</span>
+                <span>${receiptData.date}</span>
+              </div>
+              <div class="detail-item">
+                <span>Plan:</span>
+                <span>${receiptData.plan}</span>
+              </div>
+              <div class="detail-item">
+                <span>Amount:</span>
+                <span>${receiptData.amount}</span>
+              </div>
+              <div class="detail-item">
+                <span>Transaction ID:</span>
+                <span>${receiptData.transactionId}</span>
+              </div>
+              <div class="detail-item">
+                <span>Status:</span>
+                <span class="${receiptData.status === 'Completed' ? 'status-active' : 'status-expired'}">
+                  ${receiptData.status}
+                </span>
+              </div>
+            </div>
+            <div class="receipt-footer">
+              <p>Thank you for your payment!</p>
+              <p>GP Library - Pune, Maharashtra</p>
+            </div>
+          `;
+          
+          receiptModal.style.display = 'flex';
+        });
+      });
+
+      // Download generated receipt
+      const downloadGeneratedReceipt = document.getElementById('downloadGeneratedReceipt');
+      if (downloadGeneratedReceipt) {
+        downloadGeneratedReceipt.addEventListener('click', function() {
+          // In a real application, this would generate a PDF or other downloadable file
+          alert('Receipt downloaded successfully!');
+        });
+      }
+
+      // Close modals when clicking outside
+      window.addEventListener('click', function(event) {
+        if (event.target === paymentModal) {
+          paymentModal.style.display = 'none';
+        }
+        if (event.target === cancelModal) {
+          cancelModal.style.display = 'none';
+        }
+        if (event.target === receiptModal) {
+          receiptModal.style.display = 'none';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

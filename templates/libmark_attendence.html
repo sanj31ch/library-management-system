@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mark Attendance</title>
+  <link rel="stylesheet" href="{{url_for('static',filename='styles2.css')}}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    .form-card {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      color: white;
+      max-width: 500px;
+      margin: auto;
+    }
+    .student-info {
+      margin: 20px 0;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-title"><i class="fas fa-book-open"></i> GP Library</div>
+      <button class="sidebar-btn home-btn" onclick="window.location.href='/libhome'"><i class="fas fa-home"></i> Home</button>
+      <button class="sidebar-btn view-profile-btn" onclick="window.location.href='/libprofile'"><i class="fas fa-id-card"></i> View Profile</button>
+      <button class="sidebar-btn view-books-btn" onclick="window.location.href='/libbooks'"><i class="fas fa-book-reader"></i> View Books</button>
+      <button class="sidebar-btn book-history-btn" onclick="window.location.href='/libhistory'"><i class="fas fa-history"></i> Book History</button>
+      <button class="sidebar-btn students-btn" onclick="window.location.href='/libstudents'"><i class="fas fa-users"></i> Students</button>
+      <button class="sidebar-btn notice-btn dropdown"><i class="fas fa-bell"></i> Notice</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libsend_notice'"><i class="fas fa-paper-plane"></i> Send Notice</button>
+        <button onclick="window.location.href='/libview_notice'"><i class="fas fa-eye"></i> View Notices</button>
+      </div>
+      <button class="sidebar-btn attendance-btn dropdown"><i class="fas fa-calendar-check"></i> Attendance</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libmark_attendence'"><i class="fas fa-user-check"></i> Mark Attendance</button>
+        <button onclick="window.location.href='/libview_attendance'"><i class="fas fa-eye"></i> View Attendance</button>
+      </div>
+      <button class="sidebar-btn settings-btn dropdown active"><i class="fas fa-cog"></i> Settings</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/fine_settings'"><i class="fas fa-rupee-sign"></i> Fine Settings</button>
+        <button onclick="window.location.href='/subscription_settings'"><i class="fas fa-id-card"></i> Subscription Settings</button>
+        <!--<button onclick="window.location.href='/holiday_settings'"><i class="fas fa-calendar-times"></i> Holiday Settings</button>
+        <button onclick="window.location.href='/theme_settings'"><i class="fas fa-palette"></i> Theme Settings</button> -->
+      </div>
+    </div>
+    <button class="logout-btn" onclick="window.location.href='/'"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+
+  <div id="dashboard-content" class="dashboard">
+    <div class="home-layout">
+      <h1><i class="fas fa-user-check"></i> Mark Attendance</h1>
+      <div class="form-card">
+        <div class="form-group">
+          <label for="libIdInput">Student_ID</label>
+          <input type="text" id="libIdInput" placeholder="Enter Student's Student_id" />
+          <button class="search-btn" id="searchAttendance"><i class="fas fa-search"></i> Search</button>
+        </div>
+
+        <div id="studentInfo" class="student-info">
+          <h3>Student Information</h3>
+          <p><strong>Name:</strong> <span id="studentName"></span></p>
+          <p><strong>Student_ID</strong>:</strong> <span id="studentLibId"></span></p>
+          <p><strong>Department:</strong> <span id="studentDept"></span></p>
+        </div>
+
+        <div class="form-group">
+          <label for="attendanceStatus">Status</label>
+          <select id="attendanceStatus">
+            <option value="Present">Present</option>
+            <option value="Absent">Absent</option>
+          </select>
+        </div>
+
+        <button class="add-btn" id="submitAttendance"><i class="fas fa-check"></i> Submit Attendance</button>
+        <div class="form-actions" style="margin-top: 20px;">
+          <button class="back-btn" onclick="location.href='/libhome'">Back to Home</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Optional Toast -->
+  <div class="toast" id="toast"><i class="fas fa-check-circle"></i> <span id="toast-message">Message</span></div>
+
+  <!-- JavaScript -->
+  <script>
+    const dropdowns = document.querySelectorAll('.sidebar-btn.dropdown'); 
+    dropdowns.forEach(btn => { 
+      btn.addEventListener('click', (e) => {
+        if (e.target.classList.contains('active')) {
+          return;
+        }
+        
+        dropdowns.forEach(b => { 
+          if (b !== btn) b.classList.remove('active'); 
+        }); 
+        btn.classList.toggle('active'); 
+      }); 
+    }); 
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.sidebar-btn.dropdown')) {
+        dropdowns.forEach(btn => {
+          btn.classList.remove('active');
+        });
+      }
+    });
+
+    // Function to show toast message
+    function showToast(message, isError = false) {
+      const toast = document.getElementById("toast");
+      const toastMsg = document.getElementById("toast-message");
+      toastMsg.textContent = message;
+      toast.classList.toggle("error", isError);
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3000);
+    }
+document.getElementById("searchAttendance").addEventListener("click", async () => {
+    const studentId = document.getElementById("libIdInput").value.trim();
+    
+    if (!studentId) {
+        showToast("Please enter a Student ID", true);
+        return;
+    }
+
+    try {
+        const response = await fetch('/search_student', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ student_id: studentId })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error) {
+            showToast(data.error, true);
+            document.getElementById("studentInfo").style.display = "none";
+        } else {
+            // Display student information
+            document.getElementById("studentName").textContent = data.name;
+            document.getElementById("studentLibId").textContent = data.student_id;
+            document.getElementById("studentDept").textContent = data.dep;
+            document.getElementById("studentInfo").style.display = "block";
+            showToast("Student found!");
+        }
+    } catch (error) {
+        console.error("Error searching student:", error);
+        showToast("Error searching student", true);
+    }
+});
+
+// Submit attendance function
+document.getElementById("submitAttendance").addEventListener("click", async () => {
+    const studentId = document.getElementById("libIdInput").value.trim();
+    const status = document.getElementById("attendanceStatus").value;
+
+    if (!studentId) {
+        showToast("Please enter a Student ID", true);
+        return;
+    }
+
+    try {
+        const response = await fetch('/submit_attendance', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                student_id: studentId,
+                status: status
+            })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast(result.message);
+            document.getElementById("libIdInput").value = "";
+            document.getElementById("studentInfo").style.display = "none";
+        } else {
+            showToast(result.error || "Failed to mark attendance", true);
+        }
+    } catch (error) {
+        console.error("Error marking attendance:", error);
+        showToast("Error marking attendance", true);
+    }
+});
+  </script>
+</body>
+</html>

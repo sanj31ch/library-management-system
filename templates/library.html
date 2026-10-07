@@ -1,0 +1,2145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GP Library Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="{{url_for('static',filename='styles2.css')}}">
+  <!-- Chart.js for analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    select {
+background-color: rgba(255, 255, 255, 0.1);
+color: white;
+}
+option {
+background-color: #333;
+color: white;
+}
+</style>
+</head>
+<body>
+  <div class="blur-bg"></div>
+
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-title"><i class="fas fa-book-open"></i> GP Library</div>
+      <button class="sidebar-btn home-btn"><i class="fas fa-home"></i> Home</button>
+      <button class="sidebar-btn view-profile-btn"><i class="fas fa-id-card"></i> View Profile</button>
+      <button class="sidebar-btn view-books-btn"><i class="fas fa-book-reader"></i> View Books</button>
+      <button class="sidebar-btn book-history-btn"><i class="fas fa-history" onclick="window.location.href='/bookhistory'"></i> Book History</button>
+      <button class="sidebar-btn students-btn"><i class="fas fa-users"></i> Students</button>
+      <button class="sidebar-btn notice-btn dropdown"><i class="fas fa-bell"></i> Notice</button>
+      <div class="dropdown-content">
+        <button><i class="fas fa-paper-plane"></i> Send Notice</button>
+        <button><i class="fas fa-eye"></i> View Notices</button>
+      </div>
+      <button class="sidebar-btn attendance-btn dropdown"><i class="fas fa-calendar-check"></i> Attendance</button>
+      <div class="dropdown-content">
+        <button><i class="fas fa-user-check"></i> Mark Attendance</button>
+        <button><i class="fas fa-eye"></i> View Attendance</button>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="window.location.href='/'"><i class="fas fa-sign-out-alt" ></i> Logout</button>
+  </div>
+
+  <div class="dashboard" id="dashboard-content">
+    <div class="home-layout">
+      <h1><i class="fas fa-university"></i> Welcome to GP Library</h1>
+      <p>Select any option from the sidebar to proceed.</p>
+      <div class="cards" style="padding-left: 89px;">
+        <div class="card" id="addBookCard"><i class="fas fa-book-medical"></i><span>Add Book</span></div>
+        <div class="card" id="addStudentCard"><i class="fas fa-user-plus"></i><span>Add Student</span></div>
+        <div class="card" id="analyticsCard"><i class="fas fa-chart-line"></i><span>Analytics</span></div>
+        
+        <div class="card" id="issueBookCard"><i class="fas fa-book"></i><span>Issue Book</span></div>
+        <div class="card" id="returnBookCard"><i class="fas fa-undo"></i><span>Return Book</span></div>
+        <div class="card" id="fineCard"><i class="fas fa-rupee-sign"></i><span>Fine</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toast-message">Book added successfully!</span>
+  </div>
+  
+
+  <script>
+    
+    // Initialize data from localStorage or with default values
+    let books = JSON.parse(localStorage.getItem('libraryBooks')) || [
+      {id: '101', name: 'Java Basics', author: 'James Gosling', isbn: '9781234567890', publisher: 'Sun Press', price: '450', pages: '250', quantity: '10', available: 10},
+      {id: '102', name: 'HTML & CSS', author: 'Jon Duckett', isbn: '9781118008188', publisher: 'Wiley', price: '500', pages: '400', quantity: '7', available: 7},
+      {id: '103', name: 'Data Structures', author: 'Narasimha Karumanchi', isbn: '9788120340077', publisher: 'CareerMonk', price: '600', pages: '500', quantity: '5', available: 5},
+      {id: '104', name: 'Python Programming', author: 'Eric Matthes', isbn: '9781593279288', publisher: 'No Starch Press', price: '550', pages: '544', quantity: '8', available: 8},
+      {id: '105', name: 'Database Systems', author: 'Raghu Ramakrishnan', isbn: '9780072465631', publisher: 'McGraw-Hill', price: '650', pages: '960', quantity: '4', available: 4}
+    ];
+
+    let students = JSON.parse(localStorage.getItem('libraryStudents')) || [
+      {id: '1', lib_id: 'LIB001', name: 'Rahul Sharma', year: 'Third', course: 'B.Tech (CSE)', semester: '5', mobile: '9876543210'},
+      {id: '2', lib_id: 'LIB002', name: 'Priya Patel', year: 'Second', course: 'B.Sc (IT)', semester: '3', mobile: '8765432109'},
+      {id: '3', lib_id: 'LIB003', name: 'Amit Singh', year: 'First', course: 'BCA', semester: '1', mobile: '7654321098'},
+      {id: '4', lib_id: 'LIB004', name: 'Neha Gupta', year: 'Third', course: 'B.Tech (ECE)', semester: '6', mobile: '6543210987'},
+      {id: '5', lib_id: 'LIB005', name: 'Vikram Joshi', year: 'Final', course: 'B.Tech (ME)', semester: '8', mobile: '9432109876'},
+      {id: '6', lib_id: 'LIB006', name: 'Sneha Reddy', year: 'Second', course: 'B.Tech (CSE)', semester: '4', mobile: '8321098765'},
+      {id: '7', lib_id: 'LIB007', name: 'Rajesh Verma', year: 'First', course: 'BBA', semester: '2', mobile: '7210987654'}
+    ];
+
+    let issuedBooks = JSON.parse(localStorage.getItem('issuedBooks')) || [
+      {issueId: '1001', bookId: '101', studentId: '1', issueDate: '2025-06-01', dueDate: '2025-06-15', returnDate: '', fine: 0},
+      {issueId: '1002', bookId: '102', studentId: '3', issueDate: '2025-06-05', dueDate: '2025-06-19', returnDate: '', fine: 0},
+      {issueId: '1003', bookId: '103', studentId: '5', issueDate: '2025-05-20', dueDate: '2025-06-03', returnDate: '2025-06-10', fine: 70}
+    ];
+
+    let notices = JSON.parse(localStorage.getItem('libraryNotices')) || [
+      {id: '1', title: 'Library Closure', content: 'The library will be closed on June 21 for maintenance.', date: '2025-06-15', sender: 'Admin', recipient: 'all'},
+      {id: '2', title: 'Summer Reading Challenge', content: 'Participate in our summer reading challenge!', date: '2025-06-01', sender: 'Events Team', recipient: 'all'}
+    ];
+
+    // Save data to localStorage
+    function saveBooks() {
+      localStorage.setItem('libraryBooks', JSON.stringify(books));
+    }
+
+    function saveStudents() {
+      localStorage.setItem('libraryStudents', JSON.stringify(students));
+    }
+
+    function saveIssuedBooks() {
+      localStorage.setItem('issuedBooks', JSON.stringify(issuedBooks));
+    }
+
+    function saveNotices() {
+      localStorage.setItem('libraryNotices', JSON.stringify(notices));
+    }
+
+    // Toast notification function
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      toastMessage.textContent = message;
+      
+      if (isError) {
+        toast.classList.add('error');
+      } else {
+        toast.classList.remove('error');
+      }
+      
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Helper function to format date
+    function formatDate(dateString) {
+      if (!dateString) return '';
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      return new Date(dateString).toLocaleDateString('en-US', options);
+    }
+
+    // Calculate days between dates
+    function daysBetween(date1, date2) {
+      const oneDay = 24 * 60 * 60 * 1000;
+      const firstDate = new Date(date1);
+      const secondDate = new Date(date2);
+      return Math.round(Math.abs((firstDate - secondDate) / oneDay));
+    }
+
+    // Calculate fine (₹10 per day)
+    function calculateFine(dueDate, returnDate) {
+      const today = new Date().toISOString().split('T')[0];
+      const actualReturnDate = returnDate || today;
+      
+      if (actualReturnDate <= dueDate) return 0;
+      
+      const daysLate = daysBetween(dueDate, actualReturnDate);
+      return daysLate * 10;
+    }
+
+    // Update book availability
+    function updateBookAvailability() {
+      books.forEach(book => {
+        const issuedCount = issuedBooks.filter(
+          issue => issue.bookId === book.id && !issue.returnDate
+        ).length;
+        book.available = book.quantity - issuedCount;
+      });
+      saveBooks();
+    }
+
+    // Initialize dropdown functionality
+    const dropdowns = document.querySelectorAll('.sidebar-btn.dropdown'); 
+    dropdowns.forEach(btn => { 
+      btn.addEventListener('click', (e) => {
+        // Don't toggle if clicking on a dropdown button that's already active
+        if (e.target.classList.contains('active')) {
+          return;
+        }
+        
+        dropdowns.forEach(b => { 
+          if (b !== btn) b.classList.remove('active'); 
+        }); 
+        btn.classList.toggle('active'); 
+      }); 
+    }); 
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.sidebar-btn.dropdown')) {
+        dropdowns.forEach(btn => {
+          btn.classList.remove('active');
+        });
+      }
+    });
+
+    // Home button
+    document.querySelector(".home-btn").addEventListener("click", () => { 
+      location.reload(); 
+    }); 
+
+    document.querySelector(".view-profile-btn").addEventListener("click", () => { 
+      document.getElementById("dashboard-content").innerHTML = ` 
+        <div class="home-layout"> 
+          <h1><i class="fas fa-id-card"></i> Librarian Profile</h1> 
+          <div class="profile-container">
+            <div class="profile-header">
+              <div class="profile-avatar">
+                <i class="fas fa-user-circle"></i>
+              </div>
+              <div class="profile-info">
+                <h2>Library Admin</h2>
+                <p>Librarian</p>
+              </div>
+            </div>
+            
+            <div class="profile-details">
+              <div class="detail-item">
+                <span class="detail-label">ID:</span>
+                <span class="detail-value">{{id}}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Name:</span>
+                <span class="detail-value">{{name}}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Email:</span>
+                <span class="detail-value">{{email}}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Mobile:</span>
+                <span class="detail-value">{{mobile}}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Gender:</span>
+                <span class="detail-value">{{gender}}</span>
+              </div>
+              <div class="detail-item">
+                <span class="detail-label">Qualification:</span>
+                <span class="detail-value">{{qualify}}</span>
+              </div>
+            </div>
+            
+            <div class="profile-actions">
+              <button class="edit-profile-btn" onclick="enableProfileEdit()">
+                <i class="fas fa-edit"></i> Edit Profile
+              </button>
+            </div>
+          </div>
+        </div> 
+      `; 
+    }); 
+  
+
+    // Enable profile editing
+    window.enableProfileEdit = function() {
+      document.getElementById("dashboard-content").innerHTML = ` 
+        <div class="home-layout"> 
+          <h1><i class="fas fa-id-card"></i> Edit Profile</h1> 
+          <form class="profile-form" id="editProfileForm" onsubmit="event.preventDefault(); "> 
+            <div class="form-group"><label>Name:</label><input type="text" id="profileName"  value="{{name}}" /></div> 
+            <div class="form-group"><label>Mobile Number (10 digits):</label><input type="text" id="profileMobile"  value="{{mobile}}" /></div> 
+            <div class="form-group"><label>Email:</label><input type="email" id="profileEmail"  value="{{email}}" /></div> 
+            <div class="form-group"><label>Qualification :</label></label><input type="text" id="profileAddress"  value="{{qualify}}" /></div> 
+            <div class="form-actions"> 
+              <button type="submit" class="update-btn" onclick="lsave()">Save Changes</button> 
+              <button type="button" class="back-btn" onclick="document.querySelector('.view-profile-btn').click()">Cancel</button> 
+            </div> 
+          </form> 
+        </div> 
+      `;
+    };
+    function lsave(){
+      let lname=document.getElementById('profileName').value;
+      let lmobile=document.getElementById('profileMobile').value;
+      let lemail=document.getElementById('profileEmail').value;
+      let lqualify=document.getElementById('profileAddress').value;
+      fetch('update',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({Role:'LIBRARIAN',name:lname,mobile:lmobile,email:lemail,qualify:lqualify})
+      })
+      .then(response=>response.json())
+      .then(data=>{
+        let stat=data;
+        if (stat=='Updated') {
+          showToast('Profile updated successfully!');
+         // document.querySelector('.view-profile-btn').click();
+         window.location.href='/library';
+        }
+        if (stat=='Failed') {
+          alert('Failed')
+        }
+      })
+      .catch(error=>{
+        console.log(error);
+        alert("other error");
+      })
+    }
+    // Save profile changes
+    
+
+    // Add Book Card
+    document.getElementById("addBookCard").addEventListener("click", () => {
+      document.getElementById("dashboard-content").innerHTML = `
+        <div class="home-layout">
+          <h1><i class="fas fa-book-medical"></i> Add New Book</h1>
+          
+          <form class="add-form" id="addBookForm">
+            <h2>Book Details</h2>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Book ID</label>
+                <input type="text" id="bookId" required placeholder="Enter book ID" />
+              </div>
+              <div class="form-group">
+                <label>Book Name</label>
+                <input type="text" id="bookName" required placeholder="Enter book name" />
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Author</label>
+                <input type="text" id="bookAuthor" required placeholder="Enter author name" />
+              </div>
+              <div class="form-group">
+                <label>ISBN</label>
+                <input type="text" id="bookIsbn" required placeholder="Enter ISBN number" />
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Publisher</label>
+                <input type="text" id="bookPublisher" required placeholder="Enter publisher name" />
+              </div>
+              <div class="form-group">
+                <label>Price (₹)</label>
+                <input type="number" id="bookPrice" required placeholder="Enter price" min="0" />
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Pages</label>
+                <input type="number" id="bookPages" required placeholder="Enter total pages" min="1" />
+              </div>
+              <div class="form-group">
+                <label>Quantity</label>
+                <input type="number" id="bookQuantity" required placeholder="Enter quantity" min="1" />
+              </div>
+            </div>
+            
+            <button type="submit" class="add-btn">
+              <i class="fas fa-plus-circle"></i> Add Book
+            </button>
+            
+            <div class="form-actions" style="margin-top: 20px;">
+              <button type="button" class="back-btn" onclick="location.reload()">Back to Home</button>
+            </div>
+          </form>
+        </div>
+      `;
+
+      document.getElementById("addBookForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        
+        const bookId = document.getElementById("bookId").value;
+        const bookName = document.getElementById("bookName").value;
+        const bookAuthor = document.getElementById("bookAuthor").value;
+        const bookIsbn = document.getElementById("bookIsbn").value;
+        const bookPublisher = document.getElementById("bookPublisher").value;
+        const bookPrice = document.getElementById("bookPrice").value;
+        const bookPages = document.getElementById("bookPages").value;
+        const bookQuantity = document.getElementById("bookQuantity").value;
+        
+        // Check if book ID already exists
+        if (books.some(book => book.id === bookId)) {
+          showToast('Book ID already exists!', true);
+          return;
+        }
+        
+        books.push({
+          id: bookId,
+          name: bookName,
+          author: bookAuthor,
+          isbn: bookIsbn,
+          publisher: bookPublisher,
+          price: bookPrice,
+          pages: bookPages,
+          quantity: bookQuantity,
+          available: bookQuantity
+        });
+        
+        saveBooks();
+        showToast(`${bookName} added successfully!`);
+        this.reset();
+      });
+    });
+
+    // Add Student Card
+    document.getElementById("addStudentCard").addEventListener("click", () => {
+      document.getElementById("dashboard-content").innerHTML = `
+        <div class="home-layout">
+          <h1><i class="fas fa-user-plus"></i> Add New Student</h1>
+          
+          <form class="add-form" id="addStudentForm">
+            <div class="form-header">
+              <div class="form-header-icon">
+                <i class="fas fa-user-graduate"></i>
+              </div>
+              <h2>Student Registration</h2>
+              <p>Fill in the details to register a new student</p>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Student ID</label>
+                <input type="text" id="studentId" required placeholder="Enter student ID" />
+              </div>
+              <div class="form-group">
+                <label>Library ID</label>
+                <input type="text" id="studentLibId" required placeholder="Enter library ID (e.g. LIB001)" />
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="studentName" required placeholder="Enter student name" />
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Year</label>
+                <select id="studentYear" required>
+                  <option value="">Select Year</option>
+                  <option value="First">First Year</option>
+                  <option value="Second">Second Year</option>
+                  <option value="Third">Third Year</option>
+                  <option value="Final">Final Year</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Course</label>
+                <select id="studentCourse" required>
+                  <option value="">Select Course</option>
+                  <option value="B.Tech (CSE)">B.Tech (CSE)</option>
+                  <option value="B.Tech (ECE)">B.Tech (ECE)</option>
+                  <option value="B.Tech (ME)">B.Tech (ME)</option>
+                  <option value="B.Sc (IT)">B.Sc (IT)</option>
+                  <option value="BCA">BCA</option>
+                  <option value="BBA">BBA</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Semester</label>
+                <select id="studentSemester" required>
+                  <option value="">Select Semester</option>
+                  <option value="1">Semester 1</option>
+                  <option value="2">Semester 2</option>
+                  <option value="3">Semester 3</option>
+                  <option value="4">Semester 4</option>
+                  <option value="5">Semester 5</option>
+                  <option value="6">Semester 6</option>
+                  <option value="7">Semester 7</option>
+                  <option value="8">Semester 8</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Mobile Number</label>
+                <input type="text" id="studentMobile" required placeholder="Enter mobile number" pattern="\\d{10}" />
+              </div>
+            </div>
+            
+            <div class="form-footer">
+              <button type="submit" class="add-btn">
+                <i class="fas fa-user-plus"></i> Register Student
+              </button>
+              <button type="button" class="back-btn" onclick="location.reload()">
+                <i class="fas fa-arrow-left"></i> Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      `;
+      
+      document.getElementById("addStudentForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        
+        const studentId = document.getElementById("studentId").value;
+        const studentLibId = document.getElementById("studentLibId").value;
+        const studentName = document.getElementById("studentName").value;
+        const studentYear = document.getElementById("studentYear").value;
+        const studentCourse = document.getElementById("studentCourse").value;
+        const studentSemester = document.getElementById("studentSemester").value;
+        const studentMobile = document.getElementById("studentMobile").value;
+        
+        // Check if student ID already exists
+        if (students.some(student => student.id === studentId)) {
+          showToast('Student ID already exists!', true);
+          return;
+        }
+        
+        // Check if library ID already exists
+        if (students.some(student => student.lib_id === studentLibId)) {
+          showToast('Library ID already exists!', true);
+          return;
+        }
+        
+        students.push({
+          id: studentId,
+          lib_id: studentLibId,
+          name: studentName,
+          year: studentYear,
+          course: studentCourse,
+          semester: studentSemester,
+          mobile: studentMobile
+        });
+        
+        saveStudents();
+        showToast(`${studentName} registered successfully!`);
+        this.reset();
+      });
+    });
+
+    // Analytics Card
+    document.getElementById("analyticsCard").addEventListener("click", () => {
+      updateBookAvailability();
+      
+      // Calculate statistics
+      const totalBooks = books.reduce((sum, book) => sum + parseInt(book.quantity), 0);
+      const availableBooks = books.reduce((sum, book) => sum + parseInt(book.available), 0);
+      const issuedBooksCount = totalBooks - availableBooks;
+      const totalStudents = students.length;
+      
+      // Calculate overdue books
+      const today = new Date().toISOString().split('T')[0];
+      const overdueBooks = issuedBooks.filter(issue => 
+        !issue.returnDate && issue.dueDate < today
+      ).length;
+      
+      document.getElementById("dashboard-content").innerHTML = `
+        <div class="home-layout">
+          <h1><i class="fas fa-chart-line"></i> Library Analytics</h1>
+          
+          <div class="stats-container">
+            <div class="stat-card">
+              <h3>Total Books</h3>
+              <div class="value">${totalBooks}</div>
+              <div class="change">${books.length} titles</div>
+            </div>
+            
+            <div class="stat-card">
+              <h3>Available Books</h3>
+              <div class="value">${availableBooks}</div>
+              <div class="change">${Math.round((availableBooks/totalBooks)*100)}% available</div>
+            </div>
+            
+            <div class="stat-card">
+              <h3>Issued Books</h3>
+              <div class="value">${issuedBooksCount}</div>
+              <div class="change ${overdueBooks > 0 ? 'negative' : ''}">
+                ${overdueBooks} overdue
+              </div>
+            </div>
+            
+            <div class="stat-card">
+              <h3>Registered Students</h3>
+              <div class="value">${totalStudents}</div>
+              <div class="change">${issuedBooksCount} active issues</div>
+            </div>
+          </div>
+          
+          <div class="chart-container" style="height: 300px; width: 400px;">
+            <h2>Book Availability</h2>
+            <canvas id="availabilityChart"></canvas>
+          </div>
+          
+          <div class="chart-container" style="height: 300px; width: 400px;">
+            <h2>Monthly Issues</h2>
+            <canvas id="monthlyIssuesChart"></canvas>
+          </div>
+          
+          <div class="form-actions" style="margin-top: 20px;">
+            <button class="back-btn" onclick="location.reload()">Back to Home</button>
+          </div>
+        </div>
+      `;
+
+      // Create availability pie chart
+      const availabilityCtx = document.getElementById('availabilityChart').getContext('2d');
+      new Chart(availabilityCtx, {
+        type: 'pie',
+        data: {
+          labels: ['Available', 'Issued'],
+          datasets: [{
+            data: [availableBooks, issuedBooksCount],
+            backgroundColor: ['#4CAF50', '#2196F3'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          }
+        }
+      });
+
+      // Create monthly issues bar chart (sample data)
+      const monthlyCtx = document.getElementById('monthlyIssuesChart').getContext('2d');
+      new Chart(monthlyCtx, {
+        type: 'bar',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          datasets: [{
+            label: 'Books Issued',
+            data: [12, 19, 15, 20, 18, 25],
+            backgroundColor: '#4CAF50',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    });
+
+    // Book History
+    document.querySelector(".book-history-btn").addEventListener("click", () => {
+      updateBookAvailability();
+      
+      document.getElementById("dashboard-content").innerHTML = `
+        <div class="home-layout">
+          <h1><i class="fas fa-history"></i> Book History</h1>
+          
+          <div class="filter-container">
+            <div class="filter-group">
+              <label>Filter by Status:</label>
+              <select id="historyStatusFilter">
+                <option value="all">All</option>
+                <option value="issued">Issued</option>
+                <option value="returned">Returned</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Filter by Date Range:</label>
+              <input type="date" id="historyStartDate" />
+              <span style="color: white; margin: 0 10px;">to</span>
+              <input type="date" id="historyEndDate" />
+            </div>
+            <div class="filter-group">
+              <label>Search:</label>
+              <input type="text" id="historySearch" placeholder="Search by book, student or ID..." />
+            </div>
+          </div>
+          
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Issue ID</th>
+                  <th>Book</th>
+                  <th>Student</th>
+                  <th>Issue Date</th>
+                  <th>Due Date</th>
+                  <th>Return Date</th>
+                  <th>Days Overdue</th>
+                  <th>Fine (₹)</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="historyTableBody">
+                ${issuedBooks.map(issue => {
+                  const book = books.find(b => b.id === issue.bookId);
+                  const student = students.find(s => s.id === issue.studentId);
+                  const isReturned = issue.returnDate !== '';
+                  const daysOverdue = isReturned ? daysBetween(issue.dueDate, issue.returnDate) : 
+                                      (issue.dueDate < new Date().toISOString().split('T')[0] ? 
+                                       daysBetween(issue.dueDate, new Date().toISOString().split('T')[0]) : 0);
+                  const fine = issue.fine || (daysOverdue > 0 ? daysOverdue * 10 : 0);
+                  const isOverdue = !isReturned && daysOverdue > 0;
+                  
+                  return `
+                    <tr data-status="${isReturned ? 'returned' : 'issued'}" 
+                        data-issue-date="${issue.issueDate}"
+                        data-return-date="${issue.returnDate || ''}">
+                      <td>${issue.issueId}</td>
+                      <td>${book.name} (ID: ${book.id})</td>
+                      <td>${student.name} (ID: ${student.id})</td>
+                      <td>${formatDate(issue.issueDate)}</td>
+                      <td>${formatDate(issue.dueDate)}</td>
+                      <td>${isReturned ? formatDate(issue.returnDate) : 'Not returned'}</td>
+                      <td>${daysOverdue > 0 ? daysOverdue : '-'}</td>
+                      <td>${fine > 0 ? fine : '-'}</td>
+                      <td>
+                        <span class="status-badge ${isReturned ? 'returned' : 'issued'}">
+                          ${isReturned ? 'Returned' : 'Issued'}
+                        </span>
+                      </td>
+                      <td>
+                        ${isOverdue ? `
+                          <button class="notice-btn" onclick="sendOverdueNotice('${issue.issueId}')">
+                            <i class="fas fa-bell"></i> Send Notice
+                          </button>
+                        ` : '-'}
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="form-actions" style="margin-top: 20px;">
+            <button class="back-btn" onclick="location.reload()">Back to Home</button>
+          </div>
+        </div>
+      `;
+      
+      window.sendOverdueNotice = function(issueId) {
+        const issue = issuedBooks.find(i => i.issueId === issueId);
+        if (!issue) return;
+        
+        const book = books.find(b => b.id === issue.bookId);
+        const student = students.find(s => s.id === issue.studentId);
+        const daysOverdue = daysBetween(issue.dueDate, new Date().toISOString().split('T')[0]);
+        const fine = daysOverdue * 10;
+        
+        // Create notice
+        const noticeId = 'N' + Date.now().toString().slice(-6);
+        const noticeTitle = `Overdue Book: ${book.name}`;
+        const noticeContent = `Dear ${student.name},\n\nThis is a reminder that your book "${book.name}" is overdue by ${daysOverdue} days. Please return it immediately to avoid additional fines. Current fine: ₹${fine}.\n\nThank you,\nLibrary Admin`;
+        
+        notices.push({
+          id: noticeId,
+          title: noticeTitle,
+          content: noticeContent,
+          date: new Date().toISOString().split('T')[0],
+          sender: 'Library Admin',
+          recipient: student.id
+        });
+        
+        saveNotices();
+        showToast(`Overdue notice sent to ${student.name}`);
+      };
+      
+      // Add filter functionality
+      document.getElementById("historyStatusFilter").addEventListener("change", function() {
+        filterHistoryTable();
+      });
+      
+      document.getElementById("historyStartDate").addEventListener("change", function() {
+        filterHistoryTable();
+      });
+      
+      document.getElementById("historyEndDate").addEventListener("change", function() {
+        filterHistoryTable();
+      });
+      
+      // Add search functionality
+      document.getElementById("historySearch").addEventListener("input", function() {
+        filterHistoryTable();
+      });
+      
+      function filterHistoryTable() {
+        const statusFilter = document.getElementById("historyStatusFilter").value;
+        const startDate = document.getElementById("historyStartDate").value;
+        const endDate = document.getElementById("historyEndDate").value;
+        const searchTerm = document.getElementById("historySearch").value.toLowerCase();
+        
+        const rows = document.querySelectorAll("#historyTableBody tr");
+        
+        rows.forEach(row => {
+          const status = row.getAttribute('data-status');
+          const issueDate = row.getAttribute('data-issue-date');
+          const returnDate = row.getAttribute('data-return-date');
+          const text = row.textContent.toLowerCase();
+          
+          // Status filter
+          const statusMatch = statusFilter === 'all' || status === statusFilter;
+          
+          // Date range filter
+          let dateMatch = true;
+          if (startDate) {
+            dateMatch = dateMatch && (issueDate >= startDate || (returnDate && returnDate >= startDate));
+          }
+          if (endDate) {
+            dateMatch = dateMatch && (issueDate <= endDate || (returnDate && returnDate <= endDate));
+          }
+          
+          // Search term
+          const searchMatch = !searchTerm || text.includes(searchTerm);
+          
+          row.style.display = statusMatch && dateMatch && searchMatch ? "" : "none";
+        });
+      }
+    });
+
+    // Fine Card
+    document.getElementById("fineCard").addEventListener("click", () => {
+      updateBookAvailability();
+      
+      // Get books with fines
+      const finedIssues = issuedBooks.filter(issue => issue.fine > 0 || 
+        (issue.returnDate && calculateFine(issue.dueDate, issue.returnDate) > 0));
+      
+      document.getElementById("dashboard-content").innerHTML = `
+        <div class="home-layout">
+          <h1><i class="fas fa-rupee-sign"></i> Fine Management</h1>
+          
+          <div class="fine-calculator">
+            <h2>Quick Fine Calculator</h2>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Student ID</label>
+                <input type="text" id="fineStudentId" placeholder="Enter student ID" />
+                <button type="button" class="search-btn" onclick="searchStudentForFine()">
+                  <i class="fas fa-search"></i> Search
+                </button>
+              </div>
+              <div id="fineStudentInfo" class="student-info" style="display: none;">
+                <div><strong>Name:</strong> <span id="fineStudentName"></span></div>
+                <div><strong>Library ID:</strong> <span id="fineStudentLibId"></span></div>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Book ID</label>
+                <input type="text" id="fineBookId" placeholder="Enter book ID" />
+                <button type="button" class="search-btn" onclick="searchBookForFine()">
+                  <i class="fas fa-search"></i> Search
+                </button>
+              </div>
+              <div id="fineBookInfo" class="student-info" style="display: none;">
+                <div><strong>Title:</strong> <span id="fineBookTitle"></span></div>
+                <div><strong>Author:</strong> <span id="fineBookAuthor"></span></div>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Due Date</label>
+                <input type="date" id="fineDueDate" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label>Return Date</label>
+                <input type="date" id="fineReturnDate" class="form-control" value="${new Date().toISOString().split('T')[0]}" />
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Reason</label>
+                <input type="text" id="fineReason" placeholder="Enter reason for fine" />
+              </div>
+            </div>
+            
+            <button class="update-btn" onclick="calculateAndApplyFine()" style="width: 100%;">
+              Calculate & Apply Fine
+            </button>
+            <div class="fine-result" id="fineResult">
+              Fine will be calculated here
+            </div>
+          </div>
+          
+          <h2 style="margin-top: 30px;">Fine History</h2>
+          <div class="filter-container">
+            <div class="filter-group">
+              <label>Filter by Status:</label>
+              <select id="fineStatusFilter">
+                <option value="all">All</option>
+                <option value="pending">Pending</option>
+                <option value="paid">Paid</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Search:</label>
+              <input type="text" id="fineSearch" placeholder="Search by student, book or ID..." />
+            </div>
+          </div>
+          
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Book</th>
+                  <th>Issue ID</th>
+                  <th>Due Date</th>
+                  <th>Return Date</th>
+                  <th>Reason</th>
+                  <th>Fine (₹)</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="fineTableBody">
+                ${finedIssues.map(issue => {
+                  const book = books.find(b => b.id === issue.bookId);
+                  const student = students.find(s => s.id === issue.studentId);
+                  const isPaid = issue.finePaid || false;
+                  const fine = issue.fine || calculateFine(issue.dueDate, issue.returnDate || new Date().toISOString().split('T')[0]);
+                  const reason = issue.fineReason || 'Late return';
+                  
+                  return `
+                    <tr data-status="${isPaid ? 'paid' : 'pending'}">
+                      <td>${student.name} (${student.lib_id})</td>
+                      <td>${book.name}</td>
+                      <td>${issue.issueId}</td>
+                      <td>${formatDate(issue.dueDate)}</td>
+                      <td>${issue.returnDate ? formatDate(issue.returnDate) : '-'}</td>
+                      <td>${reason}</td>
+                      <td>${fine}</td>
+                      <td>
+                        <span class="status-badge ${isPaid ? 'paid' : 'pending'}">
+                          ${isPaid ? 'Paid' : 'Pending'}
+                        </span>
+                      </td>
+                      <td>
+                        ${!isPaid ? `
+                          <button class="pay-btn" onclick="markFinePaid('${issue.issueId}')">
+                            <i class="fas fa-check"></i> Mark Paid
+                          </button>
+                        ` : ''}
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="form-actions" style="margin-top: 20px;">
+            <button class="back-btn" onclick="location.reload()">Back to Home</button>
+          </div>
+        </div>
+      `;
+      
+      // Add filter functionality
+      document.getElementById("fineStatusFilter").addEventListener("change", function() {
+        filterFineTable();
+      });
+      
+      // Add search functionality
+      document.getElementById("fineSearch").addEventListener("input", function() {
+        filterFineTable();
+      });
+      
+      function filterFineTable() {
+        const statusFilter = document.getElementById("fineStatusFilter").value;
+        const searchTerm = document.getElementById("fineSearch").value.toLowerCase();
+        const rows = document.querySelectorAll("#fineTableBody tr");
+        
+        rows.forEach(row => {
+          const status = row.getAttribute('data-status');
+          const text = row.textContent.toLowerCase();
+          
+          const statusMatch = statusFilter === 'all' || status === statusFilter;
+          const searchMatch = !searchTerm || text.includes(searchTerm);
+          
+          row.style.display = statusMatch && searchMatch ? "" : "none";
+        });
+      }
+    });
+
+    // Search student for fine
+    window.searchStudentForFine = function() {
+      const studentId = document.getElementById("fineStudentId").value;
+      const student = students.find(s => s.id === studentId);
+      
+      if (!student) {
+        showToast('Student not found!', true);
+        return;
+      }
+      
+      document.getElementById("fineStudentName").textContent = student.name;
+      document.getElementById("fineStudentLibId").textContent = student.lib_id;
+      document.getElementById("fineStudentInfo").style.display = "block";
+    };
+
+    // Search book for fine
+    window.searchBookForFine = function() {
+      const bookId = document.getElementById("fineBookId").value;
+      const book = books.find(b => b.id === bookId);
+      
+      if (!book) {
+        showToast('Book not found!', true);
+        return;
+      }
+      
+      document.getElementById("fineBookTitle").textContent = book.name;
+      document.getElementById("fineBookAuthor").textContent = book.author;
+      document.getElementById("fineBookInfo").style.display = "block";
+    };
+
+    // Calculate and apply fine
+    window.calculateAndApplyFine = function() {
+      const studentId = document.getElementById("fineStudentId").value;
+      const bookId = document.getElementById("fineBookId").value;
+      const dueDate = document.getElementById("fineDueDate").value;
+      const returnDate = document.getElementById("fineReturnDate").value;
+      const reason = document.getElementById("fineReason").value || 'Late return';
+      
+      if (!studentId || !bookId || !dueDate || !returnDate) {
+        showToast('Please fill all required fields', true);
+        return;
+      }
+      
+      const fine = calculateFine(dueDate, returnDate);
+      
+      if (fine <= 0) {
+        showToast('No fine applicable - return date is on or before due date', false);
+        return;
+      }
+      
+      // Find the issue record
+      const issue = issuedBooks.find(i => 
+        i.studentId === studentId && 
+        i.bookId === bookId && 
+        i.dueDate === dueDate
+      );
+      
+      if (issue) {
+        // Update existing issue
+        issue.returnDate = returnDate;
+        issue.fine = fine;
+        issue.fineReason = reason;
+      } else {
+        // Create a new fine record (not associated with a book issue)
+        const issueId = 'F' + Date.now().toString().slice(-6);
+        issuedBooks.push({
+          issueId,
+          bookId,
+          studentId,
+          issueDate: dueDate,
+          dueDate,
+          returnDate,
+          fine,
+          fineReason: reason
+        });
+      }
+      
+      saveIssuedBooks();
+      
+      document.getElementById("fineResult").innerHTML = `
+        <strong>Fine Applied:</strong> ₹${fine}<br>
+        <small>Reason: ${reason}</small>
+      `;
+      
+      showToast(`Fine of ₹${fine} applied successfully!`);
+      
+      // Refresh the fine table
+      setTimeout(() => {
+        document.getElementById("fineCard").click();
+      }, 1000);
+    };
+
+    // Mark fine as paid
+    window.markFinePaid = function(issueId) {
+      const issue = issuedBooks.find(i => i.issueId === issueId);
+      if (!issue) return;
+      
+      issue.finePaid = true;
+      saveIssuedBooks();
+      showToast(`Fine of ₹${issue.fine} marked as paid`);
+      document.getElementById("fineCard").click();
+    };
+
+    // Issue Book Card
+    document.getElementById("issueBookCard").addEventListener("click", () => {
+      updateBookAvailability();
+      
+      document.getElementById("dashboard-content").innerHTML = `
+        <div class="home-layout">
+          <h1><i class="fas fa-book"></i> Issue Book</h1>
+          
+          <form class="add-form" id="issueBookForm">
+            <h2>Issue Book Details</h2>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Book Name/ID</label>
+                <input type="text" id="bookSearch" placeholder="Enter book name or ID" />
+                <div id="bookResults" class="search-results"></div>
+              </div>
+            </div>
+            
+            <div id="selectedBookInfo" class="selected-info" style="display: none;">
+              <h4>Selected Book</h4>
+              <div class="info-content">
+                <div><strong>Name:</strong> <span id="selectedBookName"></span></div>
+                <div><strong>Author:</strong> <span id="selectedBookAuthor"></span></div>
+                <div><strong>Available:</strong> <span id="selectedBookAvailable"></span></div>
+                <input type="hidden" id="issueBookId" />
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Student Name/ID</label>
+                <input type="text" id="studentSearch" placeholder="Enter student name or ID" />
+                <div id="studentResults" class="search-results"></div>
+              </div>
+            </div>
+            
+            <div id="selectedStudentInfo" class="selected-info" style="display: none;">
+              <h4>Selected Student</h4>
+              <div class="info-content">
+                <div><strong>Name:</strong> <span id="selectedStudentName"></span></div>
+                <div><strong>Course:</strong> <span id="selectedStudentCourse"></span></div>
+                <div><strong>Library ID:</strong> <span id="selectedStudentLibId"></span></div>
+                <input type="hidden" id="issueStudentId" />
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Issue Date</label>
+                <input type="date" id="issueDate" required value="${new Date().toISOString().split('T')[0]}" />
+              </div>
+              <div class="form-group">
+                <label>Due Date (14 days)</label>
+                <input type="date" id="dueDate" required 
+                  value="${new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}" />
+              </div>
+            </div>
+            
+            <button type="submit" class="add-btn" id="issueBookBtn" disabled>
+              <i class="fas fa-check-circle"></i> Issue Book
+            </button>
+            
+            <div class="form-actions" style="margin-top: 20px;">
+              <button type="button" class="back-btn" onclick="location.reload()">Back to Home</button>
+            </div>
+          </form>
+        </div>
+      `;
+
+      // Book search functionality
+      document.getElementById("bookSearch").addEventListener("input", function() {
+        const searchTerm = this.value.toLowerCase();
+        const resultsContainer = document.getElementById("bookResults");
+        resultsContainer.innerHTML = '';
+        
+        if (searchTerm.length < 2) return;
+        
+        const matchedBooks = books.filter(book => 
+          book.name.toLowerCase().includes(searchTerm) || 
+          book.id.toLowerCase().includes(searchTerm)
+        ).slice(0, 5);
+        
+        if (matchedBooks.length > 0) {
+          matchedBooks.forEach(book => {
+            const resultItem = document.createElement("div");
+            resultItem.className = "search-result-item";
+            resultItem.innerHTML = `
+              <div><strong>${book.name}</strong> (ID: ${book.id})</div>
+              <div>Author: ${book.author} | Available: ${book.available}</div>
+            `;
+            resultItem.addEventListener("click", () => {
+              document.getElementById("bookSearch").value = book.name;
+              document.getElementById("selectedBookName").textContent = book.name;
+              document.getElementById("selectedBookAuthor").textContent = book.author;
+              document.getElementById("selectedBookAvailable").textContent = book.available;
+              document.getElementById("issueBookId").value = book.id;
+              document.getElementById("selectedBookInfo").style.display = "block";
+              resultsContainer.innerHTML = '';
+              checkIssueButton();
+            });
+            resultsContainer.appendChild(resultItem);
+          });
+        } else {
+          resultsContainer.innerHTML = '<div class="no-results">No books found</div>';
+        }
+      });
+      
+      // Student search functionality
+      document.getElementById("studentSearch").addEventListener("input", function() {
+        const searchTerm = this.value.toLowerCase();
+        const resultsContainer = document.getElementById("studentResults");
+        resultsContainer.innerHTML = '';
+        
+        if (searchTerm.length < 2) return;
+        
+        const matchedStudents = students.filter(student => 
+          student.name.toLowerCase().includes(searchTerm) || 
+          student.id.toLowerCase().includes(searchTerm) ||
+          student.lib_id.toLowerCase().includes(searchTerm)
+        ).slice(0, 5);
+        
+        if (matchedStudents.length > 0) {
+          matchedStudents.forEach(student => {
+            const resultItem = document.createElement("div");
+            resultItem.className = "search-result-item";
+            resultItem.innerHTML = `
+              <div><strong>${student.name}</strong> (ID: ${student.id})</div>
+              <div>${student.course} | ${student.lib_id}</div>
+            `;
+            resultItem.addEventListener("click", () => {
+              document.getElementById("studentSearch").value = student.name;
+              document.getElementById("selectedStudentName").textContent = student.name;
+              document.getElementById("selectedStudentCourse").textContent = student.course;
+              document.getElementById("selectedStudentLibId").textContent = student.lib_id;
+              document.getElementById("issueStudentId").value = student.id;
+              document.getElementById("selectedStudentInfo").style.display = "block";
+              resultsContainer.innerHTML = '';
+              checkIssueButton();
+            });
+            resultsContainer.appendChild(resultItem);
+          });
+        } else {
+          resultsContainer.innerHTML = '<div class="no-results">No students found</div>';
+        }
+      });
+      
+      // Check if issue button should be enabled
+      function checkIssueButton() {
+        const bookId = document.getElementById("issueBookId").value;
+        const studentId = document.getElementById("issueStudentId").value;
+        document.getElementById("issueBookBtn").disabled = !(bookId && studentId);
+      }
+      
+      document.getElementById("issueBookForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        
+        const bookId = document.getElementById("issueBookId").value;
+        const studentId = document.getElementById("issueStudentId").value;
+        const issueDate = document.getElementById("issueDate").value;
+        const dueDate = document.getElementById("dueDate").value;
+        
+        // Generate unique issue ID
+        const issueId = 'I' + Date.now().toString().slice(-6);
+        
+        issuedBooks.push({
+          issueId,
+          bookId,
+          studentId,
+          issueDate,
+          dueDate,
+          returnDate: '',
+          fine: 0
+        });
+        
+        saveIssuedBooks();
+        updateBookAvailability();
+        
+        const book = books.find(b => b.id === bookId);
+        const student = students.find(s => s.id === studentId);
+        
+        showToast(`${book.name} issued to ${student.name} successfully!`);
+        this.reset();
+        document.getElementById("selectedBookInfo").style.display = "none";
+        document.getElementById("selectedStudentInfo").style.display = "none";
+        document.getElementById("issueBookBtn").disabled = true;
+      });
+    });
+
+    // Return Book Card
+    document.getElementById("returnBookCard").addEventListener("click", () => {
+      updateBookAvailability();
+      
+      // Get currently issued books
+      const activeIssues = issuedBooks.filter(issue => !issue.returnDate);
+      
+      document.getElementById("dashboard-content").innerHTML = `
+        <div class="home-layout">
+          <h1><i class="fas fa-undo"></i> Return Book</h1>
+          
+          <input type="text" class="search-input" id="returnSearch" placeholder="Search by book, student or issue ID..." />
+          
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Issue ID</th>
+                  <th>Book</th>
+                  <th>Student</th>
+                  <th>Issue Date</th>
+                  <th>Due Date</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="returnTableBody">
+                ${activeIssues.map(issue => {
+                  const book = books.find(b => b.id === issue.bookId);
+                  const student = students.find(s => s.id === issue.studentId);
+                  return `
+                    <tr>
+                      <td>${issue.issueId}</td>
+                      <td>${book.name} (ID: ${book.id})</td>
+                      <td>${student.name} (ID: ${student.id})</td>
+                      <td>${formatDate(issue.issueDate)}</td>
+                      <td>${formatDate(issue.dueDate)}</td>
+                      <td>
+                        <button class="return-btn" onclick="returnBook('${issue.issueId}')">
+                          <i class="fas fa-undo"></i> Return
+                        </button>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="form-actions" style="margin-top: 20px;">
+            <button class="back-btn" onclick="location.reload()">Back to Home</button>
+          </div>
+        </div>
+      `;
+      
+      // Add search functionality
+      document.getElementById("returnSearch").addEventListener("input", function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll("#returnTableBody tr");
+        
+        rows.forEach(row => {
+          const text = row.textContent.toLowerCase();
+          row.style.display = text.includes(searchTerm) ? "" : "none";
+        });
+      });
+    });
+
+    // Return book function
+    window.returnBook = function(issueId) {
+      const issue = issuedBooks.find(i => i.issueId === issueId);
+      if (!issue) return;
+      
+      const today = new Date().toISOString().split('T')[0];
+      const fine = calculateFine(issue.dueDate, today);
+      
+      issue.returnDate = today;
+      issue.fine = fine;
+      issue.fineReason = 'Late return';
+      
+      saveIssuedBooks();
+      updateBookAvailability();
+      
+      const book = books.find(b => b.id === issue.bookId);
+      const student = students.find(s => s.id === issue.studentId);
+      
+      if (fine > 0) {
+        showToast(`${book.name} returned by ${student.name}. Fine: ₹${fine}`, false);
+      } else {
+        showToast(`${book.name} returned by ${student.name} successfully!`, false);
+      }
+      
+      // Refresh the return book view
+      document.getElementById("returnBookCard").click();
+    };
+    
+    
+      document.querySelector(".view-books-btn").addEventListener("click", () => {
+      updateBookAvailability();
+      
+      document.getElementById("dashboard-content").innerHTML = `
+        <div class="home-layout">
+          <h1><i class="fas fa-book-reader"></i> View All Books</h1>
+          
+          <input type="text" class="search-input" id="bookSearch" placeholder="Search by book name, author or ID..." />
+          
+          <div class="data-table-container">
+            <table class="data-table" id="bookTable">
+              <thead>
+                <tr>
+                  <th>Book ID</th>
+                  <th>Book Name</th>
+                  <th>Author</th>
+                  <th>ISBN</th>
+                  <th>Publisher</th>
+                  <th>Available</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="bookTableBody">
+                ${books.map(book => `
+                  <tr>
+                    <td>${book.id}</td>
+                    <td>${book.name}</td>
+                    <td>${book.author}</td>
+                    <td>${book.isbn}</td>
+                    <td>${book.publisher}</td>
+                    <td>${book.available}/${book.quantity}</td>
+                    <td>
+                      <button class="action-btn" onclick="editBook('${book.id}')">
+                        <i class="fas fa-edit"></i> Edit
+                      </button>
+                      <button class="delete-btn" onclick="deleteBook('${book.id}')">
+                        <i class="fas fa-trash"></i> Delete
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="form-actions" style="margin-top: 20px;">
+            <button class="back-btn" onclick="location.reload()">Back to Home</button>
+          </div>
+        </div>
+      `;
+      
+      // Add search functionality
+      document.getElementById("bookSearch").addEventListener("input", function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll("#bookTableBody tr");
+        
+        rows.forEach(row => {
+          const text = row.textContent.toLowerCase();
+          row.style.display = text.includes(searchTerm) ? "" : "none";
+        });
+      });
+    });
+  
+    // View Books button
+   
+
+    // Edit book function
+    window.editBook = function(bookId) {
+      const book = books.find(b => b.id === bookId);
+      if (!book) return;
+      
+      document.getElementById("dashboard-content").innerHTML = `
+        <div class="home-layout">
+          <h1><i class="fas fa-edit"></i> Edit Book</h1>
+          
+          <form class="add-form" id="editBookForm">
+            <h2>Edit Book Details</h2>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Book ID</label>
+                <input type="text" id="editBookId" required value="${book.id}" readonly />
+              </div>
+              <div class="form-group">
+                <label>Book Name</label>
+                <input type="text" id="editBookName" required value="${book.name}" />
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Author</label>
+                <input type="text" id="editBookAuthor" required value="${book.author}" />
+              </div>
+              <div class="form-group">
+                <label>ISBN</label>
+                <input type="text" id="editBookIsbn" required value="${book.isbn}" />
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Publisher</label>
+                <input type="text" id="editBookPublisher" required value="${book.publisher}" />
+              </div>
+              <div class="form-group">
+                <label>Price (₹)</label>
+                <input type="number" id="editBookPrice" required value="${book.price}" min="0" />
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Pages</label>
+                <input type="number" id="editBookPages" required value="${book.pages}" min="1" />
+              </div>
+              <div class="form-group">
+                <label>Quantity</label>
+                <input type="number" id="editBookQuantity" required value="${book.quantity}" min="1" />
+              </div>
+            </div>
+            
+            <button type="submit" class="add-btn">
+              <i class="fas fa-save"></i> Save Changes
+            </button>
+            
+            <div class="form-actions" style="margin-top: 20px;">
+              <button type="button" class="back-btn" onclick="document.querySelector('.view-books-btn').click()">
+                Back to Books
+              </button>
+            </div>
+          </form>
+        </div>
+      `;
+      
+      document.getElementById("editBookForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        
+        const bookIndex = books.findIndex(b => b.id === bookId);
+        if (bookIndex === -1) return;
+        
+        books[bookIndex] = {
+          id: document.getElementById("editBookId").value,
+          name: document.getElementById("editBookName").value,
+          author: document.getElementById("editBookAuthor").value,
+          isbn: document.getElementById("editBookIsbn").value,
+          publisher: document.getElementById("editBookPublisher").value,
+          price: document.getElementById("editBookPrice").value,
+          pages: document.getElementById("editBookPages").value,
+          quantity: document.getElementById("editBookQuantity").value,
+          available: books[bookIndex].available
+        };
+        
+        saveBooks();
+        showToast(`${books[bookIndex].name} updated successfully!`);
+        document.querySelector(".view-books-btn").click();
+      });
+    };
+
+    // Delete book function
+    window.deleteBook = function(bookId) {
+      if (confirm("Are you sure you want to delete this book? This action cannot be undone.")) {
+        const bookIndex = books.findIndex(b => b.id === bookId);
+        if (bookIndex === -1) return;
+        
+        const bookName = books[bookIndex].name;
+        books.splice(bookIndex, 1);
+        
+        // Also remove any issued records for this book
+        issuedBooks = issuedBooks.filter(issue => issue.bookId !== bookId);
+        
+        saveBooks();
+        saveIssuedBooks();
+        showToast(`${bookName} deleted successfully!`);
+        document.querySelector(".view-books-btn").click();
+      }
+    };
+
+    // Students button
+    document.querySelector(".students-btn").addEventListener("click", () => {
+      document.getElementById("dashboard-content").innerHTML = `
+        <div class="home-layout">
+          <h1><i class="fas fa-users"></i> Student Management</h1>
+          
+          <input type="text" class="search-input" id="studentSearch" placeholder="Search by student name or ID..." />
+          
+          <div class="data-table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Student ID</th>
+                  <th>Library ID</th>
+                  <th>Name</th>
+                  <th>Course</th>
+                  <th>Year</th>
+                  <th>Semester</th>
+                  <th>Mobile</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="studentTableBody">
+                ${students.map(student => `
+                  <tr>
+                    <td>${student.id}</td>
+                    <td>${student.lib_id}</td>
+                    <td>${student.name}</td>
+                    <td>${student.course}</td>
+                    <td>${student.year}</td>
+                    <td>${student.semester}</td>
+                    <td>${student.mobile}</td>
+                    <td>
+                      <button class="action-btn" onclick="editStudent('${student.id}')">
+                        <i class="fas fa-edit"></i> Edit
+                      </button>
+                      <button class="delete-btn" onclick="deleteStudent('${student.id}')">
+                        <i class="fas fa-trash"></i> Delete
+                      </button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="form-actions" style="margin-top: 20px;">
+            <button class="back-btn" onclick="location.reload()">Back to Home</button>
+          </div>
+        </div>
+      `;
+      
+      // Add search functionality
+      document.getElementById("studentSearch").addEventListener("input", function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll("#studentTableBody tr");
+        
+        rows.forEach(row => {
+          const text = row.textContent.toLowerCase();
+          row.style.display = text.includes(searchTerm) ? "" : "none";
+        });
+      });
+    });
+
+    // Edit student function
+    window.editStudent = function(studentId) {
+      const student = students.find(s => s.id === studentId);
+      if (!student) return;
+      
+      document.getElementById("dashboard-content").innerHTML = `
+        <div class="home-layout">
+          <h1><i class="fas fa-edit"></i> Edit Student</h1>
+          
+          <form class="add-form" id="editStudentForm">
+            <h2>Edit Student Details</h2>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Student ID</label>
+                <input type="text" id="editStudentId" required value="${student.id}" readonly />
+              </div>
+              <div class="form-group">
+                <label>Library ID</label>
+                <input type="text" id="editStudentLibId" required value="${student.lib_id}" />
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="editStudentName" required value="${student.name}" />
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Year</label>
+                <select id="editStudentYear" required>
+                  <option value="First" ${student.year === 'First' ? 'selected' : ''}>First Year</option>
+                  <option value="Second" ${student.year === 'Second' ? 'selected' : ''}>Second Year</option>
+                  <option value="Third" ${student.year === 'Third' ? 'selected' : ''}>Third Year</option>
+                  <option value="Final" ${student.year === 'Final' ? 'selected' : ''}>Final Year</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Course</label>
+                <select id="editStudentCourse" required>
+                  <option value="B.Tech (CSE)" ${student.course === 'B.Tech (CSE)' ? 'selected' : ''}>B.Tech (CSE)</option>
+                  <option value="B.Tech (ECE)" ${student.course === 'B.Tech (ECE)' ? 'selected' : ''}>B.Tech (ECE)</option>
+                  <option value="B.Tech (ME)" ${student.course === 'B.Tech (ME)' ? 'selected' : ''}>B.Tech (ME)</option>
+                  <option value="B.Sc (IT)" ${student.course === 'B.Sc (IT)' ? 'selected' : ''}>B.Sc (IT)</option>
+                  <option value="BCA" ${student.course === 'BCA' ? 'selected' : ''}>BCA</option>
+                  <option value="BBA" ${student.course === 'BBA' ? 'selected' : ''}>BBA</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Semester</label>
+                <select id="editStudentSemester" required>
+                  ${[1,2,3,4,5,6,7,8].map(sem => 
+                    `<option value="${sem}" ${student.semester === sem.toString() ? 'selected' : ''}>
+                      Semester ${sem}
+                    </option>`
+                  ).join('')}
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Mobile Number</label>
+                <input type="text" id="editStudentMobile" required value="${student.mobile}" pattern="\\d{10}" />
+              </div>
+            </div>
+            
+            <button type="submit" class="add-btn">
+              <i class="fas fa-save"></i> Save Changes
+            </button>
+            
+            <div class="form-actions" style="margin-top: 20px;">
+              <button type="button" class="back-btn" onclick="document.querySelector('.students-btn').click()">
+                Back to Students
+              </button>
+            </div>
+          </form>
+        </div>
+      `;
+      
+      document.getElementById("editStudentForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        
+        const studentIndex = students.findIndex(s => s.id === studentId);
+        if (studentIndex === -1) return;
+        
+        students[studentIndex] = {
+          id: document.getElementById("editStudentId").value,
+          lib_id: document.getElementById("editStudentLibId").value,
+          name: document.getElementById("editStudentName").value,
+          year: document.getElementById("editStudentYear").value,
+          course: document.getElementById("editStudentCourse").value,
+          semester: document.getElementById("editStudentSemester").value,
+          mobile: document.getElementById("editStudentMobile").value
+        };
+        
+        saveStudents();
+        showToast(`${students[studentIndex].name} updated successfully!`);
+        document.querySelector(".students-btn").click();
+      });
+    };
+
+    // Delete student function
+    window.deleteStudent = function(studentId) {
+      if (confirm("Are you sure you want to delete this student? This action cannot be undone.")) {
+        const studentIndex = students.findIndex(s => s.id === studentId);
+        if (studentIndex === -1) return;
+        
+        const studentName = students[studentIndex].name;
+        
+        // Check if student has any books issued
+        const hasIssuedBooks = issuedBooks.some(issue => 
+          issue.studentId === studentId && !issue.returnDate
+        );
+        
+        if (hasIssuedBooks) {
+          showToast('Cannot delete student with issued books!', true);
+          return;
+        }
+        
+        students.splice(studentIndex, 1);
+        saveStudents();
+        showToast(`${studentName} deleted successfully!`);
+        document.querySelector(".students-btn").click();
+      }
+    };
+
+    // Send Notice button
+    document.querySelector(".notice-btn + .dropdown-content button:first-child").addEventListener("click", () => {
+      document.getElementById("dashboard-content").innerHTML = `
+        <div class="home-layout">
+          <h1><i class="fas fa-paper-plane"></i> Send Notice</h1>
+          
+          <form class="add-form" id="sendNoticeForm">
+            <div class="form-group">
+              <label>Notice Title</label>
+              <input type="text" id="noticeTitle" required placeholder="Enter notice title" />
+            </div>
+            
+            <div class="form-group">
+              <label>Notice Content</label>
+              <textarea id="noticeContent" rows="5" required placeholder="Enter notice content"></textarea>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="noticeDate" required value="${new Date().toISOString().split('T')[0]}" />
+              </div>
+              <div class="form-group">
+                <label>Sender</label>
+                <input type="text" id="noticeSender" required value="Library Admin" />
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Recipient</label>
+              <select id="noticeRecipient" required onchange="handleRecipientChange()">
+                <option value="all">Admin</option>
+                <option value="all">All Students</option>
+                <option value="specific">Specific Student</option>
+              </select>
+            </div>
+            
+            <div id="specificStudentField" style="display: none;">
+              <div class="form-group">
+                <label>Student ID</label>
+                <input type="text" id="noticeStudentId" placeholder="Enter student ID" />
+                <button type="button" class="search-btn" onclick="searchStudentForNotice()">
+                  <i class="fas fa-search"></i> Search
+                </button>
+              </div>
+              <div id="noticeStudentInfo" class="student-info" style="display: none;">
+                <div><strong>Name:</strong> <span id="noticeStudentName"></span></div>
+                <div><strong>Course:</strong> <span id="noticeStudentCourse"></span></div>
+              </div>
+            </div>
+            
+            <button type="submit" class="add-btn">
+              <i class="fas fa-paper-plane"></i> Send Notice
+            </button>
+            
+            <div class="form-actions" style="margin-top: 20px;">
+              <button type="button" class="back-btn" onclick="location.reload()">Back to Home</button>
+            </div>
+          </form>
+        </div>
+      `;
+      
+      document.getElementById("sendNoticeForm").addEventListener("submit", function(e) {
+        e.preventDefault();
+        
+        const noticeId = 'N' + Date.now().toString().slice(-6);
+        const noticeTitle = document.getElementById("noticeTitle").value;
+        const noticeContent = document.getElementById("noticeContent").value;
+        const noticeDate = document.getElementById("noticeDate").value;
+        const noticeSender = document.getElementById("noticeSender").value;
+        const recipientType = document.getElementById("noticeRecipient").value;
+        const noticeStudentId = document.getElementById("noticeStudentId").value;
+        
+        let recipient = 'all';
+        if (recipientType === 'specific' && noticeStudentId) {
+          recipient = noticeStudentId;
+        }
+        
+        notices.push({
+          id: noticeId,
+          title: noticeTitle,
+          content: noticeContent,
+          date: noticeDate,
+          sender: noticeSender,
+          recipient: recipient
+        });
+        
+        saveNotices();
+        showToast(`Notice "${noticeTitle}" sent successfully!`);
+        this.reset();
+        document.getElementById("specificStudentField").style.display = "none";
+        document.getElementById("noticeStudentInfo").style.display = "none";
+      });
+    });
+
+    // Handle recipient change for notice
+    window.handleRecipientChange = function() {
+      const recipientType = document.getElementById("noticeRecipient").value;
+      if (recipientType === 'specific') {
+        document.getElementById("specificStudentField").style.display = "block";
+      } else {
+        document.getElementById("specificStudentField").style.display = "none";
+        document.getElementById("noticeStudentInfo").style.display = "none";
+      }
+    };
+
+    // Search student for notice
+    window.searchStudentForNotice = function() {
+      const studentId = document.getElementById("noticeStudentId").value;
+      const student = students.find(s => s.id === studentId);
+      
+      if (!student) {
+        showToast('Student not found!', true);
+        return;
+      }
+      
+      document.getElementById("noticeStudentName").textContent = student.name;
+      document.getElementById("noticeStudentCourse").textContent = student.course;
+      document.getElementById("noticeStudentInfo").style.display = "block";
+    };
+
+    // View Notices button
+    document.querySelector(".notice-btn + .dropdown-content button:last-child").addEventListener("click", () => {
+      document.getElementById("dashboard-content").innerHTML = `
+        <div class="home-layout">
+          <h1><i class="fas fa-eye"></i> View Notices</h1>
+          
+          <div class="filter-container">
+            <div class="filter-group">
+              <label>Filter by Sender:</label>
+              <select id="noticeSenderFilter">
+                <option value="all">All</option>
+                <option value="Library Admin">Library Admin</option>
+                <option value="Events Team">Events Team</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Filter by Date:</label>
+              <input type="date" id="noticeDateFilter" />
+            </div>
+            <div class="filter-group">
+              <label>Search:</label>
+              <input type="text" id="noticeSearch" placeholder="Search notices..." />
+            </div>
+          </div>
+          
+          <h2 style="margin-top: 20px;">Sent Notices</h2>
+          <div class="notices-container">
+            ${notices.filter(n => n.sender === 'Library Admin' || n.sender === 'Events Team').map(notice => `
+              <div class="notice-card">
+                <div class="notice-header">
+                  <h3>${notice.title}</h3>
+                  <span class="notice-date">${formatDate(notice.date)}</span>
+                </div>
+                <div class="notice-content">
+                  <p>${notice.content}</p>
+                </div>
+                <div class="notice-footer">
+                  <span class="notice-sender">To: ${notice.recipient === 'all' ? 'All Students' : 
+                    students.find(s => s.id === notice.recipient)?.name || notice.recipient}</span>
+                  <button class="delete-btn" onclick="deleteNotice('${notice.id}')">
+                    <i class="fas fa-trash"></i> Delete
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          
+          <h2 style="margin-top: 30px;">Received Notices</h2>
+          <div class="notices-container">
+            ${notices.filter(n => n.recipient === 'all').map(notice => `
+              <div class="notice-card">
+                <div class="notice-header">
+                  <h3>${notice.title}</h3>
+                  <span class="notice-date">${formatDate(notice.date)}</span>
+                </div>
+                <div class="notice-content">
+                  <p>${notice.content}</p>
+                </div>
+                <div class="notice-footer">
+                  <span class="notice-sender">From: ${notice.sender}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          
+          <div class="form-actions" style="margin-top: 20px;">
+            <button class="back-btn" onclick="location.reload()">Back to Home</button>
+          </div>
+        </div>
+      `;
+      
+      // Add filter functionality
+      document.getElementById("noticeSenderFilter").addEventListener("change", function() {
+        filterNotices();
+      });
+      
+      document.getElementById("noticeDateFilter").addEventListener("change", function() {
+        filterNotices();
+      });
+      
+      // Add search functionality
+      document.getElementById("noticeSearch").addEventListener("input", function() {
+        filterNotices();
+      });
+      
+      function filterNotices() {
+        const senderFilter = document.getElementById("noticeSenderFilter").value;
+        const dateFilter = document.getElementById("noticeDateFilter").value;
+        const searchTerm = document.getElementById("noticeSearch").value.toLowerCase();
+        
+        // Filter sent notices
+        const sentNotices = document.querySelectorAll(".notices-container:first-of-type .notice-card");
+        sentNotices.forEach(notice => {
+          const sender = notice.querySelector(".notice-sender").textContent.toLowerCase();
+          const date = notice.querySelector(".notice-date").textContent;
+          const text = notice.textContent.toLowerCase();
+          
+          const senderMatch = senderFilter === 'all' || 
+                             notice.textContent.includes(senderFilter);
+          const dateMatch = !dateFilter || date.includes(dateFilter);
+          const searchMatch = !searchTerm || text.includes(searchTerm);
+          
+          notice.style.display = senderMatch && dateMatch && searchMatch ? "" : "none";
+        });
+        
+        // Filter received notices
+        const receivedNotices = document.querySelectorAll(".notices-container:last-of-type .notice-card");
+        receivedNotices.forEach(notice => {
+          const text = notice.textContent.toLowerCase();
+          const date = notice.querySelector(".notice-date").textContent;
+          
+          const dateMatch = !dateFilter || date.includes(dateFilter);
+          const searchMatch = !searchTerm || text.includes(searchTerm);
+          
+          notice.style.display = dateMatch && searchMatch ? "" : "none";
+        });
+      }
+    });
+
+    // Delete notice function
+    window.deleteNotice = function(noticeId) {
+      if (confirm("Are you sure you want to delete this notice?")) {
+        const noticeIndex = notices.findIndex(n => n.id === noticeId);
+        if (noticeIndex === -1) return;
+        
+        notices.splice(noticeIndex, 1);
+        saveNotices();
+        showToast("Notice deleted successfully");
+        document.querySelector(".notice-btn + .dropdown-content button:last-child").click();
+      }
+    };
+
+    // Mark Attendance button
+    document.querySelector(".attendance-btn + .dropdown-content button:first-child").addEventListener("click", () => {
+      document.getElementById("dashboard-content").innerHTML = `
+        <div class="home-layout">
+          <h1><i class="fas fa-user-check"></i> Mark Attendance</h1>
+          
+          <form class="add-form" id="attendanceForm" style="max-width: 500px;">
+            <h2>Today's Date: ${new Date().toLocaleDateString('en-US', { 
+              weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+            })}</h2>
+            
+            <div class="form-group">
+              <label>Library ID</label>
+              <input type="text" id="attendanceLibId" placeholder="Enter student's Library ID" />
+              <button type="button" class="search-btn" onclick="searchStudentByLibId()">
+                <i class="fas fa-search"></i> Search
+              </button>
+            </div>
+            
+            <div id="studentInfo" class="student-info" style="display: none;">
+              <h4>Student Information</h4>
+              <div class="info-content">
+                <div><strong>Name:</strong> <span id="attendanceStudentName"></span></div>
+                <div><strong>Course:</strong> <span id="attendanceStudentCourse"></span></div>
+                <input type="hidden" id="attendanceStudentId" />
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label>Status</label>
+              <select id="attendanceStatus" class="recipient-select" required>
+                <option value="present">Present</option>
+                <option value="absent">Absent</option>
+              </select>
+            </div>
+            
+            <button type="submit" class="add-btn" id="submitAttendanceBtn" disabled>
+              <i class="fas fa-check"></i> Submit Attendance
+            </button>
+            
+            <div class="form-actions" style="margin-top: 20px;">
+              <button type="button" class="back-btn" onclick="location.reload()">Back to Home</button>
+            </div>
+          </form>
+        </div>
+      `;
+    });
+
+    // Search student by Library ID
+    window.searchStudentByLibId = function() {
+      const libId = document.getElementById("attendanceLibId").value;
+      const student = students.find(s => s.lib_id === libId);
+      
+      if (!student) {
+        showToast('Student not found with this Library ID', true);
+        return;
+      }
+      
+      document.getElementById("attendanceStudentName").textContent = student.name;
+      document.getElementById("attendanceStudentCourse").textContent = student.course;
+      document.getElementById("attendanceStudentId").value = student.id;
+      document.getElementById("studentInfo").style.display = "block";
+      document.getElementById("submitAttendanceBtn").disabled = false;
+    };
+
+    // View Attendance button
+    document.querySelector(".attendance-btn + .dropdown-content button:last-child").addEventListener("click", () => {
+      document.getElementById("dashboard-content").innerHTML = `
+        <div class="home-layout">
+          <h1><i class="fas fa-eye"></i> View Attendance Records</h1>
+          
+          <div style="max-width: 800px; margin: 0 auto; text-align: left;">
+            <div style="background: rgba(255,255,255,0.05); padding: 25px; border-radius: 15px; margin-bottom: 30px;">
+              <h3 style="color: #4CAF50; margin-bottom: 20px;">Attendance Summary</h3>
+              
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 25px;">
+                <div style="background: rgba(0,150,136,0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                  <div style="font-size: 1.8rem; font-weight: bold;">${students.length}</div>
+                  <div>Total Students</div>
+                </div>
+                
+                <div style="background: rgba(76,175,80,0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                  <div style="font-size: 1.8rem; font-weight: bold;">${Math.floor(students.length * 0.85)}</div>
+                  <div>Average Daily Present</div>
+                </div>
+                
+                <div style="background: rgba(244,67,54,0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                  <div style="font-size: 1.8rem; font-weight: bold;">${Math.floor(students.length * 0.15)}</div>
+                  <div>Average Daily Absent</div>
+                </div>
+              </div>
+            </div>
+            
+            <div style="background: rgba(255,255,255,0.05); padding: 25px; border-radius: 15px; margin-bottom: 20px;">
+              <h3 style="color: #FFC107; margin-bottom: 15px;">Recent Attendance Records</h3>
+              
+              <div class="data-table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Student ID</th>
+                      <th>Student Name</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>${new Date().toLocaleDateString()}</td>
+                      <td>LIB001</td>
+                      <td>Rahul Sharma</td>
+                      <td><span style="color: #4CAF50;">Present</span></td>
+                    </tr>
+                    <tr>
+                      <td>${new Date().toLocaleDateString()}</td>
+                      <td>LIB002</td>
+                      <td>Priya Patel</td>
+                      <td><span style="color: #F44336;">Absent</span></td>
+                    </tr>
+                    <tr>
+                      <td>${new Date(Date.now() - 86400000).toLocaleDateString()}</td>
+                      <td>LIB003</td>
+                      <td>Amit Singh</td>
+                      <td><span style="color: #4CAF50;">Present</span></td>
+                    </tr>
+                    <tr>
+                      <td>${new Date(Date.now() - 86400000).toLocaleDateString()}</td>
+                      <td>LIB004</td>
+                      <td>Neha Gupta</td>
+                      <td><span style="color: #4CAF50;">Present</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          
+          <div class="form-actions" style="margin-top: 30px;">
+            <button class="back-btn" onclick="location.reload()">Back to Home</button>
+          </div>
+        </div>
+      `;
+    });    
+  </script>
+</body>
+</html>

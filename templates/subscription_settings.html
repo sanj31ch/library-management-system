@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Subscription Settings - GP Library</title>
+  <link rel="stylesheet" href="{{url_for('static',filename='styles2.css')}}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!--<style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    body {
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      background: url('/static/images/back.avif') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+    }
+    
+    .blur-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      backdrop-filter: blur(8px);
+      z-index: -1;
+    }
+    
+    .sidebar {
+      width: 260px;
+      height: 100vh;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(15px);
+      padding: 20px;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    
+    .sidebar-title {
+      font-size: 1.6rem;
+      color: white;
+      font-weight: bold;
+      margin-bottom: 30px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    
+    .sidebar-btn, .logout-btn {
+      width: 100%;
+      padding: 14px 18px;
+      margin-bottom: 10px;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 1rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      transition: all 0.3s ease;
+      background: linear-gradient(135deg, #8e2de2, #4a00e0);
+    }
+    
+    .sidebar-btn:hover, .logout-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+    }
+    
+    .settings-btn {
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+    }
+    
+    .dashboard {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+    }
+    
+    .welcome-card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(15px);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 25px;
+    }
+    
+    .welcome-card h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .stats-card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(15px);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    /* Subscription Settings Specific Styles */
+    .settings-group {
+      margin-bottom: 30px;
+    }
+    
+    .settings-group h3 {
+      font-size: 1.3rem;
+      margin-bottom: 15px;
+      color: white;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 10px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 12px 15px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      font-size: 1rem;
+      color: white;
+    }
+    
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+      margin-right: 10px;
+    }
+    
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255,255,255,0.2);
+      transition: .4s;
+      border-radius: 24px;
+    }
+    
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .toggle-slider {
+      background-color: #6a11cb;
+    }
+    
+    input:checked + .toggle-slider:before {
+      transform: translateX(26px);
+    }
+    
+    .toggle-label {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 15px;
+    }
+    
+    .add-btn {
+      background: linear-gradient(135deg, #00b09b, #96c93d);
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .back-btn {
+      background: rgba(255,255,255,0.1);
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(46, 204, 113, 0.9);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+    
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    
+    .toast.error {
+      background: rgba(231, 76, 60, 0.9);
+    }
+    
+    /* Subscription Plans Table */
+    .plans-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    
+    .plans-table th, .plans-table td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .plans-table th {
+      background: rgba(255,255,255,0.2);
+    }
+    
+    .plans-table tr:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .plan-features {
+      list-style-type: none;
+    }
+    
+    .plan-features li {
+      margin-bottom: 5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .plan-features li i {
+      color: #00b09b;
+    }
+  </style>-->
+</head>
+<body>
+  <div class="blur-bg"></div>
+
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-title"><i class="fas fa-book-open"></i> GP Library</div>
+      <button class="sidebar-btn home-btn" onclick="window.location.href='/libhome'"><i class="fas fa-home"></i> Home</button>
+      <button class="sidebar-btn view-profile-btn" onclick="window.location.href='/libprofile'"><i class="fas fa-id-card"></i> View Profile</button>
+      <button class="sidebar-btn view-books-btn" onclick="window.location.href='/libbooks'"><i class="fas fa-book-reader"></i> View Books</button>
+      <button class="sidebar-btn book-history-btn" onclick="window.location.href='/libhistory'"><i class="fas fa-history"></i> Book History</button>
+      <button class="sidebar-btn students-btn" onclick="window.location.href='/libstudents'"><i class="fas fa-users"></i> Students</button>
+      <button class="sidebar-btn notice-btn dropdown"><i class="fas fa-bell"></i> Notice</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libsend_notice'"><i class="fas fa-paper-plane"></i> Send Notice</button>
+        <button onclick="window.location.href='/libview_notice'"><i class="fas fa-eye"></i> View Notices</button>
+      </div>
+      <button class="sidebar-btn attendance-btn dropdown"><i class="fas fa-calendar-check"></i> Attendance</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libmark_attendence'"><i class="fas fa-user-check"></i> Mark Attendance</button>
+        <button onclick="window.location.href='/libview_attendance'"><i class="fas fa-eye"></i> View Attendance</button>
+      </div>
+      <button class="sidebar-btn settings-btn dropdown active"><i class="fas fa-cog"></i> Settings</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/fine_settings'"><i class="fas fa-rupee-sign"></i> Fine Settings</button>
+        <button onclick="window.location.href='/subscription_settings'"><i class="fas fa-id-card"></i> Subscription Settings</button>
+        <!--<button onclick="window.location.href='/holiday_settings'"><i class="fas fa-calendar-times"></i> Holiday Settings</button>
+        <button onclick="window.location.href='/theme_settings'"><i class="fas fa-palette"></i> Theme Settings</button> -->
+      </div>
+    </div>
+    <button class="logout-btn" onclick="window.location.href='/'"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+
+  <div class="dashboard">
+    <div class="welcome-card">
+      <h1><i class="fas fa-id-card"></i> Subscription Settings</h1>
+      <p>Manage membership plans and subscription options</p>
+    </div>
+    
+    <div class="stats-card">
+      <div class="settings-group">
+        <h3>Membership Plans</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="plan-name">Plan Name</label>
+            <input type="text" id="plan-name" placeholder="E.g., Premium">
+          </div>
+          <div class="form-group">
+            <label for="plan-duration">Duration (months)</label>
+            <select id="plan-duration">
+              <option value="1">1 Month</option>
+              <option value="3">3 Months</option>
+              <option value="6">6 Months</option>
+              <option value="12" selected>12 Months</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="plan-price">Price (₹)</label>
+            <input type="number" id="plan-price" placeholder="500">
+          </div>
+          <div class="form-group">
+            <label for="max-books">Max Books Allowed</label>
+            <input type="number" id="max-books" value="5" min="1">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="plan-features">Features (comma separated)</label>
+          <input type="text" id="plan-features" placeholder="Extended borrowing, Priority access">
+        </div>
+        <button class="add-btn" id="add-plan-btn"><i class="fas fa-plus"></i> Add Plan</button>
+      </div>
+      
+      <div class="settings-group">
+        <h3>Current Plans</h3>
+        <table class="plans-table">
+          <thead>
+            <tr>
+              <th>Plan Name</th>
+              <th>Duration</th>
+              <th>Price</th>
+              <th>Max Books</th>
+              <th>Features</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="plans-list">
+            <!-- Plans will be added here -->
+            <tr>
+              <td>Basic</td>
+              <td>12 Months</td>
+              <td>₹500</td>
+              <td>3</td>
+              <td>
+                <ul class="plan-features">
+                  <li><i class="fas fa-check"></i> Standard borrowing</li>
+                  <li><i class="fas fa-check"></i> Email notifications</li>
+                </ul>
+              </td>
+              <td>
+                <button class="delete-btn"><i class="fas fa-trash"></i></button>
+                <button class="edit-btn"><i class="fas fa-edit"></i></button>
+              </td>
+            </tr>
+            <tr>
+              <td>Premium</td>
+              <td>12 Months</td>
+              <td>₹1000</td>
+              <td>5</td>
+              <td>
+                <ul class="plan-features">
+                  <li><i class="fas fa-check"></i> Extended borrowing</li>
+                  <li><i class="fas fa-check"></i> Priority access</li>
+                  <li><i class="fas fa-check"></i> SMS notifications</li>
+                </ul>
+              </td>
+              <td>
+                <button class="delete-btn"><i class="fas fa-trash"></i></button>
+                <button class="edit-btn"><i class="fas fa-edit"></i></button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="settings-group">
+        <h3>Subscription Options</h3>
+        <div class="toggle-label">
+          <label class="toggle-switch">
+            <input type="checkbox" id="auto-renewal" checked>
+            <span class="toggle-slider"></span>
+          </label>
+          <span>Enable auto-renewal</span>
+        </div>
+        <div class="toggle-label">
+          <label class="toggle-switch">
+            <input type="checkbox" id="renewal-reminders" checked>
+            <span class="toggle-slider"></span>
+          </label>
+          <span>Send renewal reminders</span>
+        </div>
+        <div class="form-group">
+          <label for="reminder-days">Reminder Days Before Expiry</label>
+          <input type="number" id="reminder-days" value="7" min="1" max="30">
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button class="back-btn" id="cancel-btn"><i class="fas fa-times"></i> Cancel</button>
+        <button class="add-btn" id="save-btn"><i class="fas fa-save"></i> Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toast-message">Settings saved successfully!</span>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add new plan functionality
+      document.getElementById('add-plan-btn').addEventListener('click', function() {
+        const name = document.getElementById('plan-name').value;
+        const duration = document.getElementById('plan-duration').value;
+        const price = document.getElementById('plan-price').value;
+        const maxBooks = document.getElementById('max-books').value;
+        const features = document.getElementById('plan-features').value;
+        
+        if (!name || !price || !maxBooks) {
+          showToast('Please fill all required fields', true);
+          return;
+        }
+        
+        const durationText = duration === '1' ? '1 Month' : 
+                           duration === '3' ? '3 Months' :
+                           duration === '6' ? '6 Months' : '12 Months';
+        
+        const featuresList = features.split(',').map(f => f.trim()).filter(f => f);
+        const featuresHTML = featuresList.map(f => `<li><i class="fas fa-check"></i> ${f}</li>`).join('');
+        
+        const newPlanHTML = `
+          <tr>
+            <td>${name}</td>
+            <td>${durationText}</td>
+            <td>₹${price}</td>
+            <td>${maxBooks}</td>
+            <td><ul class="plan-features">${featuresHTML}</ul></td>
+            <td>
+              <button class="delete-btn"><i class="fas fa-trash"></i></button>
+              <button class="edit-btn"><i class="fas fa-edit"></i></button>
+            </td>
+          </tr>
+        `;
+        
+        document.getElementById('plans-list').insertAdjacentHTML('beforeend', newPlanHTML);
+        
+        // Clear form
+        document.getElementById('plan-name').value = '';
+        document.getElementById('plan-price').value = '';
+        document.getElementById('max-books').value = '5';
+        document.getElementById('plan-features').value = '';
+        
+        showToast('New plan added successfully!');
+      });
+      
+      // Delete plan functionality
+      document.getElementById('plans-list').addEventListener('click', function(e) {
+        if (e.target.closest('.delete-btn')) {
+          if (confirm('Are you sure you want to delete this plan?')) {
+            e.target.closest('tr').remove();
+            showToast('Plan deleted successfully!');
+          }
+        }
+      });
+      
+      // Save all subscription settings
+      document.getElementById('save-btn').addEventListener('click', function() {
+        const settings = {
+          autoRenewal: document.getElementById('auto-renewal').checked,
+          renewalReminders: document.getElementById('renewal-reminders').checked,
+          reminderDays: document.getElementById('reminder-days').value
+        };
+        
+        // In a real app, you would save these settings to the server
+        console.log('Saving subscription settings:', settings);
+        showToast('Subscription settings saved successfully!');
+      });
+      
+      // Cancel button
+      document.getElementById('cancel-btn').addEventListener('click', function() {
+        window.location.href = '/libhome';
+      });
+    });
+    
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      toastMessage.textContent = message;
+      
+      if (isError) {
+        toast.classList.add('error');
+      } else {
+        toast.classList.remove('error');
+      }
+      
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Library Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background: url('https://images.unsplash.com/photo-1535905557558-afc4877a26fc?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1374&q=80') no-repeat center center fixed;
+            background-size: cover;
+        }
+
+        .blur-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backdrop-filter: blur(10px);
+            z-index: -1;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 280px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            justify-content: flex-start;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            text-align: center;
+            padding: 15px 0;
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .sidebar-btn {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(135deg, rgba(94, 114, 235, 0.8), rgba(33, 150, 243, 0.8));
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .sidebar-btn:nth-child(2) {
+            background: linear-gradient(135deg, rgba(255, 152, 0, 0.8), rgba(255, 87, 34, 0.8));
+        }
+
+        .sidebar-btn:nth-child(3) {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.8), rgba(139, 195, 74, 0.8));
+        }
+
+        .sidebar-btn:nth-child(4) {
+            background: linear-gradient(135deg, rgba(156, 39, 176, 0.8), rgba(233, 30, 99, 0.8));
+        }
+
+        .sidebar-btn:nth-child(5) {
+            background: linear-gradient(135deg, rgba(0, 188, 212, 0.8), rgba(0, 150, 136, 0.8));
+        }
+
+        .sidebar-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-btn i {
+            font-size: 1.2rem;
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, rgba(244, 67, 54, 0.8), rgba(233, 30, 99, 0.8)) !important;
+            margin-top: auto;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #FF5252;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            margin-left: 280px;
+            flex: 1;
+            padding: 20px;
+            color: white;
+            overflow-x: auto;
+            width: calc(100% - 280px);
+        }
+
+        .view-container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 1200px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin: 20px auto;
+        }
+
+        /* Dashboard View */
+        .welcome-box {
+            text-align: center;
+            display: block;
+        }
+
+        /* Fine-specific CSS */
+        .fines-view {
+            display: none;
+        }
+
+        .pay-btn {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.8), rgba(139, 195, 74, 0.8)) !important;
+            padding: 6px 12px !important;
+            font-size: 0.9rem !important;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .pay-btn:hover {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 1), rgba(139, 195, 74, 1)) !important;
+        }
+
+        .paid-text {
+            color: #66BB6A;
+            font-weight: 500;
+        }
+        
+        .processing-text {
+            color: #FFA726;
+            font-weight: 500;
+        }
+
+        /* Payment Modal */
+        .payment-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .payment-modal .modal-content {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(15px);
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .qr-container {
+            margin-bottom: 20px;
+        }
+
+        .qr-container img {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 15px;
+            display: block;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+        }
+
+        .transaction-input {
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .transaction-input label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: white;
+        }
+
+        .transaction-input input {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            color: white;
+        }
+
+        .success-icon {
+            font-size: 3rem;
+            color: #66BB6A;
+            margin-bottom: 20px;
+        }
+
+        /* Status Colors */
+        .status-pending {
+            color: #FFA726;
+        }
+        
+        .status-processing {
+            color: #29B6F6;
+        }
+
+        .status-paid {
+            color: #66BB6A;
+        }
+
+        .status-cancelled {
+            color: #F44336;
+        }
+
+        /* Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .data-table th, .data-table td {
+            padding: 10px 11px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .data-table th {
+            background-color: rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+        }
+
+        .data-table tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Filter Controls */
+        .filter-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-weight: 500;
+            white-space: nowrap;
+            color: white;
+        }
+
+        .filter-group select, .filter-group input {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            color: white;
+            min-width: 150px;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            background: rgba(94, 114, 235, 0.8);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .filter-btn:hover {
+            background: rgba(94, 114, 235, 1);
+        }
+
+        /* Back Button */
+        .back-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Loading and Error States */
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #4fc3f7;
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            color: #aaa;
+        }
+
+        /* Modal Buttons */
+        .modal-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .confirm-btn {
+            background: rgba(76, 175, 80, 0.8);
+            color: white;
+        }
+
+        .cancel-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            border-bottom: 3px solid #5E72EB;
+            color: #5E72EB;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Receipt Button */
+        .receipt-btn {
+            background: linear-gradient(135deg, rgba(94, 114, 235, 0.8), rgba(33, 150, 243, 0.8)) !important;
+            padding: 6px 12px !important;
+            font-size: 0.9rem !important;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .receipt-btn:hover {
+            background: linear-gradient(135deg, rgba(94, 114, 235, 1), rgba(33, 150, 243, 1)) !important;
+        }
+        
+        /* Status Badge */
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+        
+        .status-badge.Pending {
+            background-color: rgba(255, 152, 0, 0.2);
+            color: #FF9800;
+        }
+        
+        .status-badge.Processing {
+            background-color: rgba(33, 150, 243, 0.2);
+            color: #2196F3;
+        }
+        
+        .status-badge.Paid {
+            background-color: rgba(76, 175, 80, 0.2);
+            color: #4CAF50;
+        }
+        
+        .status-badge.Cancelled {
+            background-color: rgba(244, 67, 54, 0.2);
+            color: #F44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="blur-bg"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-book-open"></i> GP LIBRARY
+        </div>
+        <button class="sidebar-btn" id="profileBtn">
+            <i class="fas fa-user-graduate"></i> <span>View Profile</span>
+        </button>
+        <button class="sidebar-btn" id="attendanceBtn">
+            <i class="fas fa-calendar-alt"></i> <span>Borrowing History</span>
+        </button>
+        <button class="sidebar-btn" id="booksBtn">
+            <i class="fas fa-book"></i> <span>View Books</span>
+        </button>
+        <button class="sidebar-btn" id="issueBookBtn">
+            <i class="fas fa-hand-holding-heart"></i> <span>Issue Book</span>
+        </button>
+        <button class="sidebar-btn" id="notificationsBtn">
+            <i class="fas fa-bell"></i> <span>Notifications</span>
+            <span class="notification-badge" id="notificationBadge">3</span>
+        </button>
+        <!-- Fine button -->
+        <button class="sidebar-btn" id="finesBtn">
+            <i class="fas fa-money-bill-wave"></i> <span>Fines</span>
+        </button>
+        <button class="sidebar-btn logout-btn" id="logoutBtn">
+            <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+        </button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard View -->
+        <div class="view-container" id="dashboardView">
+            <div class="welcome-box">
+                <h1>Welcome Back, <span id="studentName">Student!</span></h1>
+                <p>Manage your library activities, track borrowed books, and stay updated with notifications.</p>
+            </div>
+        </div>
+
+        <!-- Fines View -->
+        <div class="view-container fines-view" id="finesView">
+            <h1>Your Fines</h1>
+            
+            <div class="tabs">
+                <div class="tab active" data-tab="currentFines">Current Fines</div>
+                <div class="tab" data-tab="fineHistory">Fine History</div>
+            </div>
+            
+            <!-- Current Fines Tab -->
+            <div class="tab-content active" id="currentFines">
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label for="fineStatusFilter">Status:</label>
+                        <select id="fineStatusFilter">
+                            <option value="all">All Status</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Processing">Processing</option>
+                            <option value="Paid">Paid</option>
+                        </select>
+                    </div>
+                    
+                    <button class="filter-btn" id="applyFineFilter">
+                        <i class="fas fa-filter"></i> Apply
+                    </button>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Book Title</th>
+                                <th>Book ID</th>
+                                <th>Issue Date</th>
+                                <th>Due Date</th>
+                                <th>Days Overdue</th>
+                                <th>Fine Amount</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="finesData">
+                            <tr>
+                                <td colspan="9" class="loading">Loading fines data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Fine History Tab -->
+            <div class="tab-content" id="fineHistory">
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label for="historyStatusFilter">Status:</label>
+                        <select id="historyStatusFilter">
+                            <option value="all">All Status</option>
+                            <option value="Paid">Paid</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="historyDateFilter">From:</label>
+                        <input type="date" id="historyDateFilter">
+                    </div>
+                    
+                    <button class="filter-btn" id="applyHistoryFilter">
+                        <i class="fas fa-filter"></i> Apply
+                    </button>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Book Title</th>
+                                <th>Book ID</th>
+                                <th>Fine Date</th>
+                                <th>Amount</th>
+                                <th>Payment Date</th>
+                                <th>Status</th>
+                                <th>Receipt</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fineHistoryData">
+                            <tr>
+                                <td>Computer Networks</td>
+                                <td>LIB-415</td>
+                                <td>10 Jan 2023</td>
+                                <td>₹75</td>
+                                <td>12 Jan 2023</td>
+                                <td><span class="status-badge Paid">Paid</span></td>
+                                <td><button class="receipt-btn" onclick="downloadReceipt('REC-2023-001')"><i class="fas fa-download"></i> Receipt</button></td>
+                            </tr>
+                            <tr>
+                                <td>Operating Systems</td>
+                                <td>LIB-520</td>
+                                <td>05 Dec 2022</td>
+                                <td>₹60</td>
+                                <td>08 Dec 2022</td>
+                                <td><span class="status-badge Paid">Paid</span></td>
+                                <td><button class="receipt-btn" onclick="downloadReceipt('REC-2022-045')"><i class="fas fa-download"></i> Receipt</button></td>
+                            </tr>
+                            <tr>
+                                <td>Software Engineering</td>
+                                <td>LIB-618</td>
+                                <td>20 Nov 2022</td>
+                                <td>₹90</td>
+                                <td>N/A</td>
+                                <td><span class="status-badge Cancelled">Cancelled</span></td>
+                                <td>N/A</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="payment-modal" id="paymentModal">
+                <div class="modal-content">
+                    <h3>Pay Fine</h3>
+                    <div id="paymentContent">
+                        <div class="qr-container">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=librarian@college&pn=College%20Library&am=" id="qrCodeImage">
+                            <p>Scan the QR code to pay using any UPI app</p>
+                        </div>
+                        <div class="transaction-input">
+                            <label for="transactionId">Transaction ID:</label>
+                            <input type="text" id="transactionId" placeholder="Enter your transaction ID">
+                        </div>
+                        <div class="modal-buttons">
+                            <button class="modal-btn confirm-btn" id="confirmPayment">I've Made the Payment</button>
+                            <button class="modal-btn cancel-btn" id="cancelPayment">Cancel</button>
+                        </div>
+                    </div>
+                    <div id="paymentSuccess" style="display: none;">
+                        <i class="fas fa-check-circle success-icon"></i>
+                        <p>Note: Go to librarian and show your transaction ID to complete your fine process</p>
+                        <button class="modal-btn confirm-btn" id="closePaymentModal">Close</button>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="back-btn" id="backFromFines">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let allFinesData = []; // This will store all fines data for the logged-in student
+
+        const today = new Date().toISOString().split('T')[0];
+        let pfine;
+        
+        // Mock student data
+        const mockStudentData = {
+            student: {
+                NAME: "Rahul Sharma",
+                STUDENT_ID: "STU2023001",
+                COURSE: "Computer Science",
+                SEMESTER: "5th",
+                EMAIL: "rahul.sharma@college.edu",
+                MOBILE_NO: "9876543210"
+            },
+            issued_books: 2,
+            unread_notifications: 3
+        };
+
+        // DOM elements
+        const sidebarBtns = {
+            profile: document.getElementById('profileBtn'),
+            attendance: document.getElementById('attendanceBtn'),
+            books: document.getElementById('booksBtn'),
+            issueBook: document.getElementById('issueBookBtn'),
+            notifications: document.getElementById('notificationsBtn'),
+            fines: document.getElementById('finesBtn'),
+            logout: document.getElementById('logoutBtn')
+        };
+
+        const views = {
+            dashboard: document.getElementById('dashboardView'),
+            fines: document.getElementById('finesView')
+        };
+
+        const backBtns = {
+            fines: document.getElementById('backFromFines')
+        }
+
+        function showView(viewName) {
+            // Hide all views first
+            Object.values(views).forEach(view => {
+                if (view) view.style.display = 'none';
+            });
+            
+            // Show the requested view
+            if (views[viewName]) {
+                views[viewName].style.display = 'block';
+            }
+        }
+
+        // Main Dashboard Initialization
+        function initDashboard() {
+            // Show fines view by default
+            showView('fines');
+            get();
+            setupEventListeners();
+        }
+
+        // Event Listeners Setup
+        function setupEventListeners() {
+            // Sidebar navigation
+            sidebarBtns.fines.addEventListener("click", () => {
+                showView('fines');
+                get();
+            });
+            
+            // Back buttons
+            backBtns.fines.addEventListener('click', () => showView('dashboard'));
+            
+            // Filter buttons
+            document.getElementById('applyFineFilter').addEventListener('click', applyFineFilter);
+            document.getElementById('applyHistoryFilter').addEventListener('click', applyHistoryFilter);
+            
+            // Payment modal buttons
+            document.getElementById('confirmPayment').addEventListener('click', confirmPayment);
+            document.getElementById('cancelPayment').addEventListener('click', cancelPayment);
+            document.getElementById('closePaymentModal').addEventListener('click', closePaymentModal);
+           
+            // Tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', switchTab);
+            });
+            
+            // Logout button
+            sidebarBtns.logout.addEventListener('click', () => {
+                window.location.href = '/';
+            });
+        }
+
+        async function get() {
+            const response = await fetch('/get_issued_books');
+            let data = await response.json();
+            books = data;
+            issuedBooks = books;
+            
+            const tbody = document.getElementById('finesData');
+            tbody.innerHTML = '';
+            
+            console.log(today);
+            books.forEach(async (issue) => {
+                if (issue.STATUS.toLowerCase() == 'overdue') {
+                    const tr = document.createElement('tr');
+                    rdate = issue.RETURN_DATE;
+                    console.log("issue date = ", issue.ISSUE_DATE);
+                    console.log("return date = ", issue.RETURN_DATE);
+                    let fine = await calculateFine(rdate, today);
+                    console.log('Fine id=', issue.FINE_ID);
+                    issue.FINE = fine;
+                    dover = fine / pfine;
+                    tr.innerHTML = `
+                        <td>${issue.BOOK_TITLE}</td>
+                        <td>${issue.BOOK_ID}</td>
+                        <td>${formatDate(issue.ISSUE_DATE)}</td>
+                        <td>${formatDate(issue.RETURN_DATE)}</td>
+                        <td>${dover}</td>
+                        <td>${issue.FINE}</td>
+                        <td><span class="status-badge Pending">Pending</span></td>
+                        <td>
+                            <button class="pay-btn" onclick="openPaymentModal('${issue.FINE_ID}', '${issue.FINE}')">Pay</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            });
+        }
+     
+        async function calculateFine(dueDateStr, returnDateStr) {
+            const res = await fetch('/default');
+            let fine = await res.json();
+            console.log("Fine=", fine);
+            pfine = fine.FINE || 1;
+            const due = new Date(dueDateStr);
+            const ret = new Date(returnDateStr);
+            const diffTime = ret.getTime() - due.getTime();
+            const daysLate = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return daysLate > 0 ? daysLate * pfine : 0; 
+        }
+
+        function applyFineFilter() {
+            const statusFilter = document.getElementById('fineStatusFilter').value;
+            const rows = document.querySelectorAll('#finesData tr');
+            
+            rows.forEach(row => {
+                const statusCell = row.querySelector('.status-badge');
+                if (statusCell) {
+                    const rowStatus = statusCell.textContent.trim();
+                    if (statusFilter === 'all' || rowStatus === statusFilter) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        function applyHistoryFilter() {
+            const statusFilter = document.getElementById('historyStatusFilter').value;
+            const dateFilter = document.getElementById('historyDateFilter').value;
+            const rows = document.querySelectorAll('#fineHistoryData tr');
+            
+            rows.forEach(row => {
+                const statusCell = row.querySelector('.status-badge');
+                const dateCell = row.cells[2]; // Fine Date column
+                
+                if (statusCell && dateCell) {
+                    const rowStatus = statusCell.textContent.trim();
+                    const rowDate = new Date(dateCell.textContent.trim());
+                    const filterDate = dateFilter ? new Date(dateFilter) : null;
+                    
+                    const statusMatch = statusFilter === 'all' || rowStatus === statusFilter;
+                    const dateMatch = !filterDate || rowDate >= filterDate;
+                    
+                    if (statusMatch && dateMatch) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        function switchTab(event) {
+            const clickedTab = event.currentTarget;
+            const selectedTabId = clickedTab.getAttribute('data-tab');
+
+            // Remove 'active' class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Add 'active' to clicked tab
+            clickedTab.classList.add('active');
+
+            // Hide all tab sections
+            document.querySelectorAll('.tab-content').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Show selected tab section
+            const selectedSection = document.getElementById(selectedTabId);
+            if (selectedSection) {
+                selectedSection.classList.add('active');
+            }
+        }
+
+        function openPaymentModal(fineId, amount) {
+            const paymentModal = document.getElementById('paymentModal');
+            const qrCodeImage = document.getElementById('qrCodeImage');
+            
+            // Update QR code with amount
+            qrCodeImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=librarian@college&pn=College%20Library&am=${amount}`;
+            
+            paymentModal.style.display = 'flex';
+            document.getElementById('paymentContent').style.display = 'block';
+            document.getElementById('paymentSuccess').style.display = 'none';
+            document.getElementById('transactionId').value = '';
+            
+            // Store fine ID and amount for confirmation
+            document.getElementById('confirmPayment').setAttribute('data-fine-id', fineId);
+            document.getElementById('confirmPayment').setAttribute('data-amount', amount);
+        }
+
+        function confirmPayment() {
+            const fineId = this.getAttribute('data-fine-id');
+            const amount = this.getAttribute('data-amount');
+            const transactionId = document.getElementById('transactionId').value.trim();
+            
+            if (!transactionId) {
+                alert('Please enter your transaction ID');
+                return;
+            }
+            
+            // Send payment confirmation to server
+            fetch('/process_fine_payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    fine_id: fineId,
+                    transaction_id: transactionId,
+                    amount: amount
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Show success message
+                    document.getElementById('paymentContent').style.display = 'none';
+                    document.getElementById('paymentSuccess').style.display = 'block';
+                } else {
+                    alert('Payment failed: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error confirming payment:', error);
+                alert('Payment failed. Please try again.');
+            });
+        }
+
+        function cancelPayment() {
+            document.getElementById('paymentModal').style.display = 'none';
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').style.display = 'none';
+            // Refresh the fines data to show updated status
+            get();
+        }
+
+        function downloadReceipt(receiptId) {
+            // Create receipt content
+            const receiptContent = `
+                <html>
+                    <head>
+                        <title>Library Fine Receipt - ${receiptId}</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; padding: 20px; }
+                            .header { text-align: center; margin-bottom: 20px; }
+                            .details { margin: 20px 0; }
+                            .footer { margin-top: 30px; text-align: center; font-size: 0.9em; color: #666; }
+                            table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                            th { background-color: #f2f2f2; }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h2>GP College Library</h2>
+                            <h3>Fine Payment Receipt</h3>
+                            <p>Receipt ID: ${receiptId}</p>
+                            <p>Date: ${new Date().toLocaleDateString()}</p>
+                        </div>
+                        
+                        <div class="details">
+                            <p><strong>Student Name:</strong> ${document.getElementById('studentName').textContent}</p>
+                            <p><strong>Transaction ID:</strong> ${receiptId}</p>
+                            
+                            <table>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                </tr>
+                                <tr>
+                                    <td>Library Fine Payment</td>
+                                    <td>₹50</td>
+                                </tr>
+                                <tr>
+                                    <th>Total</th>
+                                    <th>₹50</th>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <div class="footer">
+                            <p>Thank you for your payment. Please keep this receipt for your records.</p>
+                            <p>Library Management System - GP College</p>
+                        </div>
+                    </body>
+                </html>
+            `;
+            
+            // Create a blob and download it
+            const blob = new Blob([receiptContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Library_Fine_Receipt_${receiptId}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+
+        // Initialize the dashboard when the page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            // Set student name from mock data
+            document.getElementById('studentName').textContent = mockStudentData.student.NAME;
+            // Set notification count
+            document.getElementById('notificationBadge').textContent = mockStudentData.unread_notifications;
+            
+            initDashboard();
+        });
+        // Add this function to fetch fine history
+async function getFineHistory() {
+    try {
+        const statusFilter = document.getElementById('historyStatusFilter').value;
+        const dateFilter = document.getElementById('historyDateFilter').value;
+        
+        const params = new URLSearchParams();
+        if (statusFilter !== 'all') params.append('status', statusFilter);
+        if (dateFilter) params.append('date', dateFilter);
+        
+        const response = await fetch(`/get_fine_history?${params.toString()}`);
+        const data = await response.json();
+        
+        const tbody = document.getElementById('fineHistoryData');
+        tbody.innerHTML = '';
+        
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="no-data">No fine history found</td></tr>';
+            return;
+        }
+        
+        data.forEach(fine => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${fine.BOOK_TITLE || 'N/A'}</td>
+                <td>${fine.BOOK_ID || 'N/A'}</td>
+                <td>${formatDate(fine.RETURN_DATE) || 'N/A'}</td>
+                <td>₹${fine.FINE_AMOUNT || '0'}</td>
+                <td>${fine.PAYMENT_DATE ? formatDate(fine.PAYMENT_DATE) : 'N/A'}</td>
+                <td><span class="status-badge ${fine.STATUS}">${fine.STATUS}</span></td>
+                <td>
+                    ${fine.STATUS === 'Paid' ? 
+                        `<button class="receipt-btn" onclick="downloadReceipt('${fine.TRANSACTION_ID}')">
+                            <i class="fas fa-download"></i> Receipt
+                        </button>` : 
+                        'N/A'}
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch (error) {
+        console.error('Error fetching fine history:', error);
+        const tbody = document.getElementById('fineHistoryData');
+        tbody.innerHTML = '<tr><td colspan="7" class="error-message">Failed to load fine history</td></tr>';
+    }
+}
+
+// Update the applyHistoryFilter function
+function applyHistoryFilter() {
+    getFineHistory();
+}
+
+// Update the switchTab function to load data when tab is clicked
+function switchTab(event) {
+    const clickedTab = event.currentTarget;
+    const selectedTabId = clickedTab.getAttribute('data-tab');
+
+    // Remove 'active' class from all tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+
+    // Add 'active' to clicked tab
+    clickedTab.classList.add('active');
+
+    // Hide all tab sections
+    document.querySelectorAll('.tab-content').forEach(section => {
+        section.classList.remove('active');
+    });
+
+    // Show selected tab section
+    const selectedSection = document.getElementById(selectedTabId);
+    if (selectedSection) {
+        selectedSection.classList.add('active');
+        
+        // Load data if it's the history tab
+        if (selectedTabId === 'fineHistory') {
+            getFineHistory();
+        }
+    }
+}
+
+// Update the downloadReceipt function
+function downloadReceipt(transactionId) {
+    // Create receipt content with actual data
+    const receiptContent = `
+        <html>
+            <head>
+                <title>Library Fine Receipt - ${transactionId}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; }
+                    .header { text-align: center; margin-bottom: 20px; }
+                    .details { margin: 20px 0; }
+                    .footer { margin-top: 30px; text-align: center; font-size: 0.9em; color: #666; }
+                    table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background-color: #f2f2f2; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h2>GP College Library</h2>
+                    <h3>Fine Payment Receipt</h3>
+                    <p>Receipt ID: ${transactionId}</p>
+                    <p>Date: ${new Date().toLocaleDateString()}</p>
+                </div>
+                
+                <div class="details">
+                    <p><strong>Student Name:</strong> ${document.getElementById('studentName').textContent}</p>
+                    <p><strong>Transaction ID:</strong> ${transactionId}</p>
+                    
+                    <table>
+                        <tr>
+                            <th>Description</th>
+                            <th>Amount</th>
+                        </tr>
+                        <tr>
+                            <td>Library Fine Payment</td>
+                            <td>₹50</td>
+                        </tr>
+                        <tr>
+                            <th>Total</th>
+                            <th>₹50</th>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="footer">
+                    <p>Thank you for your payment. Please keep this receipt for your records.</p>
+                    <p>Library Management System - GP College</p>
+                </div>
+            </body>
+        </html>
+    `;
+    
+    // Create a blob and download it
+    const blob = new Blob([receiptContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Library_Fine_Receipt_${transactionId}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// Update the DOMContentLoaded event listener
+window.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('studentName').textContent = mockStudentData.student.NAME;
+    document.getElementById('notificationBadge').textContent = mockStudentData.unread_notifications;
+    
+    initDashboard();
+    
+    // Add event listener for history tab filter button
+    document.getElementById('applyHistoryFilter').addEventListener('click', applyHistoryFilter);
+});
+    </script>
+</body>
+</html>

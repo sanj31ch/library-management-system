@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Add Student - GP Library</title>
+  <link rel="stylesheet" href="{{url_for('static',filename='styles2.css')}}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    select {
+background-color: rgba(255, 255, 255, 0.1);
+color: white;
+}
+option {
+background-color: #333;
+color: white;
+}
+  </style>
+</head>
+<body>
+  <div class="blur-bg"></div>
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-title"><i class="fas fa-book-open"></i> GP Library</div>
+      <button class="sidebar-btn home-btn" onclick="window.location.href='/libhome'"><i class="fas fa-home"></i> Home</button>
+      <button class="sidebar-btn view-profile-btn" onclick="window.location.href='/libprofile'"><i class="fas fa-id-card"></i> View Profile</button>
+      <button class="sidebar-btn view-books-btn" onclick="window.location.href='/libbooks'"><i class="fas fa-book-reader"></i> View Books</button>
+      <button class="sidebar-btn book-history-btn" onclick="window.location.href='/libhistory'"><i class="fas fa-history"></i> Book History</button>
+      <button class="sidebar-btn students-btn" onclick="window.location.href='/libstudents'"><i class="fas fa-users"></i> Students</button>
+      <button class="sidebar-btn notice-btn dropdown"><i class="fas fa-bell"></i> Notice</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libsend_notice'"><i class="fas fa-paper-plane"></i> Send Notice</button>
+        <button onclick="window.location.href='/libview_notice'"><i class="fas fa-eye"></i> View Notices</button>
+      </div>
+      <button class="sidebar-btn attendance-btn dropdown"><i class="fas fa-calendar-check"></i> Attendance</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libmark_attendence'"><i class="fas fa-user-check"></i> Mark Attendance</button>
+        <button onclick="window.location.href='/libview_attendance'"><i class="fas fa-eye"></i> View Attendance</button>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="window.location.href='/'"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+
+  <!-- Add Student Form -->
+  <div class="dashboard">
+    <div class="home-layout">
+      <h1><i class="fas fa-user-plus"></i> Add New Student</h1>
+      
+      <form class="add-form" id="addStudentForm">
+        <div class="form-header">
+          <div class="form-header-icon">
+            <i class="fas fa-user-graduate"></i>
+          </div>
+          <h2>Student Registration</h2>
+          <p>Fill in the details to register a new student</p>
+        </div>
+        
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="studentEnroll">Enrollment No</label>
+            <input type="number" id="studentEnroll" required placeholder="Enter Enrollment No" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="studentName">Full Name</label>
+            <input type="text" id="studentName" required placeholder="Enter student name" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="studentEmail">Email</label>
+            <input type="email" id="studentEmail" required placeholder="Enter student Email" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="Username">Username</label>
+            <input type="text" id="Username" required placeholder="Enter Username" />
+          </div>
+          <div class="form-group">
+            <label for="Password">Password</label>
+            <input type="password" id="Password" required placeholder="Enter Password" />
+          </div>
+          <div class="form-group">
+            <label for="conPassword">Confirm Password</label>
+            <input type="password" id="conPassword" required placeholder="Enter Confirm Password" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="studentGender">Gender</label>
+            <select id="studentGender" required>
+              <option value="">Select Gender</option>
+              <option value="MALE">Male</option>
+              <option value="FEMALE">Female</option>
+              <option value="OTHER">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Course</label>
+            <select id="studentCourse" required>
+              <option value="">Select Course</option>
+              <option value="COMPUTER TECHNOLOGY(CM)">Computer Technology(CM)</option>
+              <option value="INFORMATION TECHNOLOGY(IT)">Information Technology(IT)</option>
+              <option value="MECHANICAL ENGINEERING(ME)">Mechanical Engineering(ME)</option>
+              <option value="CIVIL ENGINEERING(CE)">Civil Engineering(CE)</option>
+              <option value="ELECTICAL ENGINEERING(EE)">Electrical Engineering(EE)</option>
+              <option value="ELECTRONICS AND TELECOMMUNICATION(ENTC)">Electronics and Telecommunication(ENTC)</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="studentSemester">Semester</label>
+            <select id="studentSemester" required>
+              <option value="">Select Semester</option>
+              <option value="1">Semester 1</option>
+              <option value="2">Semester 2</option>
+              <option value="3">Semester 3</option>
+              <option value="4">Semester 4</option>
+              <option value="5">Semester 5</option>
+              <option value="6">Semester 6</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Mobile Number</label>
+            <input type="text" id="studentMobile" required placeholder="Enter mobile number"  />
+          </div>
+        </div>
+        
+        <div class="form-footer">
+          <button type="submit" class="add-btn">
+            <i class="fas fa-user-plus"></i> Register Student
+          </button>
+          <button type="button" class="back-btn" onclick="window.location.href='/libhome'">
+            <i class="fas fa-arrow-left"></i> Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toast-message">Student added successfully!</span>
+  </div>
+
+  <script>
+    const students = JSON.parse(localStorage.getItem('libraryStudents')) || [];
+
+    function saveStudents() {
+      localStorage.setItem('libraryStudents', JSON.stringify(students));
+    }
+
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      toastMessage.textContent = message;
+      toast.classList.toggle('error', isError);
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    document.getElementById("addStudentForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const studentName = document.getElementById("studentName").value.trim().toUpperCase();
+      const studentCourse = document.getElementById("studentCourse").value.toUpperCase();
+      const studentSemester = document.getElementById("studentSemester").value.toUpperCase();
+      const studentMobile = document.getElementById("studentMobile").value.trim().toUpperCase();
+      const studentEmail = document.getElementById("studentEmail").value.trim().toUpperCase();
+      const Username = document.getElementById("Username").value.trim().toUpperCase();
+      const Password = document.getElementById("Password").value.trim().toUpperCase();
+      const conPassword = document.getElementById("conPassword").value.trim().toUpperCase();
+      const studentGender = document.getElementById("studentGender").value.toUpperCase();
+      const studentEnroll=document.getElementById("studentEnroll").value.toUpperCase();
+      if (Password !== conPassword) {
+        showToast("Passwords do not match!", true);
+        return;
+      }
+      
+      fetch('/registerstudent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          enroll:studentEnroll,
+          name:studentName,
+          email:studentEmail,
+          user:Username,
+          pass:Password,
+          course:studentCourse,
+          sem:studentSemester,
+          mobile:studentMobile,
+          gender:studentGender
+        })
+      })
+      .then(response=>response.json())
+      .then(data=>{
+        showToast(data);
+      })
+      .catch(error=>{
+        console.error("Error:", error);
+        showToast("Failed to register student!", true);
+      });
+      
+    });
+    const dropdowns = document.querySelectorAll('.sidebar-btn.dropdown'); 
+    dropdowns.forEach(btn => { 
+      btn.addEventListener('click', (e) => {
+        // Don't toggle if clicking on a dropdown button that's already active
+        if (e.target.classList.contains('active')) {
+          return;
+        }
+        
+        dropdowns.forEach(b => { 
+          if (b !== btn) b.classList.remove('active'); 
+        }); 
+        btn.classList.toggle('active'); 
+      }); 
+    }); 
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.sidebar-btn.dropdown')) {
+        dropdowns.forEach(btn => {
+          btn.classList.remove('active');
+        });
+      }
+    });
+  </script>
+</body>
+</html>

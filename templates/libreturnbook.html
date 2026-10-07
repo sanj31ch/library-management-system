@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Return Book - GP Library</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="{{url_for('static',filename='styles2.css')}}">
+  <style>
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 99;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="blur-bg"></div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-title"><i class="fas fa-book-open"></i> GP Library</div>
+      <button class="sidebar-btn home-btn" onclick="window.location.href='/libhome'"><i class="fas fa-home"></i> Home</button>
+      <button class="sidebar-btn view-profile-btn" onclick="window.location.href='/libprofile'"><i class="fas fa-id-card"></i> View Profile</button>
+      <button class="sidebar-btn view-books-btn" onclick="window.location.href='/libbooks'"><i class="fas fa-book-reader"></i> View Books</button>
+      <button class="sidebar-btn book-history-btn" onclick="window.location.href='/libhistory'"><i class="fas fa-history"></i> Book History</button>
+      <button class="sidebar-btn students-btn" onclick="window.location.href='/libstudents'"><i class="fas fa-users"></i> Students</button>
+      <button class="sidebar-btn notice-btn dropdown"><i class="fas fa-bell"></i> Notice</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libsend_notice'"><i class="fas fa-paper-plane"></i> Send Notice</button>
+        <button onclick="window.location.href='/libview_notice'"><i class="fas fa-eye"></i> View Notices</button>
+      </div>
+      <button class="sidebar-btn attendance-btn dropdown"><i class="fas fa-calendar-check"></i> Attendance</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libmark_attendence'"><i class="fas fa-user-check"></i> Mark Attendance</button>
+        <button onclick="window.location.href='/libview_attendance'"><i class="fas fa-eye"></i> View Attendance</button>
+      </div>
+      <button class="sidebar-btn settings-btn dropdown active"><i class="fas fa-cog"></i> Settings</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/fine_settings'"><i class="fas fa-rupee-sign"></i> Fine Settings</button>
+        <button onclick="window.location.href='/subscription_settings'"><i class="fas fa-id-card"></i> Subscription Settings</button>
+        <!--<button onclick="window.location.href='/holiday_settings'"><i class="fas fa-calendar-times"></i> Holiday Settings</button>
+        <button onclick="window.location.href='/theme_settings'"><i class="fas fa-palette"></i> Theme Settings</button> -->
+      </div>
+    </div>
+    <button class="logout-btn" onclick="window.location.href='/'"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+
+  <!-- Main Dashboard -->
+  <div class="dashboard" id="dashboard-content">
+    <div class="home-layout">
+      <h1><i class="fas fa-undo"></i> Return Book</h1>
+      <div class="data-table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Issue ID</th>
+              <th>Book ID</th>
+              <th>Book</th>
+              <th>Student ID</th>
+              <th>Student</th>
+              <th>Issue Date</th>
+              <th>Due Date</th>
+              <th>Return Date</th>
+              <th>Fine</th>
+              <th>Status</th>
+              <th>Action</th>
+              <th>Notice</th>
+            </tr>
+          </thead>
+          <tbody id="returnTableBody"></tbody>
+        </table>
+      </div>
+      <div class="form-actions" style="margin-top: 20px;">
+        <button type="button" class="back-btn" onclick="window.location.href='/libhome'">Back to Home</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toast-message">Success</span>
+  </div>
+
+  <!-- Modal Overlay -->
+  <div id="modalOverlay" class="modal-overlay"></div>
+
+  <!-- Step 1: Confirm Modal -->
+  <div id="confirmModal" class="add-form" style="display:none; position:fixed; top:20%; left:30%; width:40%; z-index:100;">
+    <h2>Confirm Return</h2>
+    <div class="form-group">
+      <label>Are you sure you want to return this book?</label>
+    </div>
+    <div class="form-actions">
+      <button class="back-btn" onclick="closeConfirm()">Cancel</button>
+      <button class="add-btn" onclick="showFineModal()">Yes, Continue</button>
+    </div>
+  </div>
+
+  <!-- Step 2: Fine Modal -->
+  <div id="fineModal" class="add-form" style="display:none; position:fixed; top:20%; left:30%; width:40%; z-index:100;">
+    <h2>Pay Fine (if applicable)</h2>
+    <div class="form-group">
+      <label>Book:</label>
+      <div id="modalBookName" style="color:white;"></div>
+    </div>
+    <div class="form-group">
+      <label>Fine:</label>
+      <div id="modalFineAmount" style="color:white;"></div>
+    </div>
+    <div class="form-actions">
+      <button class="back-btn" onclick="closeFineModal()">Cancel</button>
+      <button class="add-btn" onclick="confirmReturn()">Pay & Return</button>
+    </div>
+  </div>
+
+  <script>
+    let books = [];
+    /*const students = [
+      { id: 'S001', lib_id: 'LIB001', name: 'Rahul Sharma' },
+      { id: 'S002', lib_id: 'LIB002', name: 'Neha Patel' }
+    ];*/
+    let issuedBooks = [];
+    let pfine=1;
+    const today = new Date().toISOString().split('T')[0]; 
+    
+    function formatDate(date) {
+      console.log("formatDate called with:", date);
+      const d = new Date(date);
+      console.log("date:", d);
+      
+      return isNaN(d.getTime())?'---': d.toISOString().split('T')[0];
+    }
+
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      toastMessage.textContent = message;
+      toast.classList.toggle('error', isError);
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function renderReturnTable() {
+      const tbody = document.getElementById('returnTableBody');
+      tbody.innerHTML = '';
+      issuedBooks.forEach(issue => {
+        const book = books.find(b => b.BOOK_ID === issue.BOOK_ID);
+        const student = students.find(s => s.id === issue.STUDENT_ID);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${issue.ISSUE_ID}</td>
+          <td>${issue?.NAME} (ID: ${issue.BOOK_ID})</td>
+          <td>${issue?.STUDENT_NAME}</td>
+          <td>${formatDate(issue.ISSUE_DATE)}</td>
+          <td>${formatDate(issue.DUE_DATE)}</td>
+          <td><span class="status-badge issued">Issued</span></td>
+          <td><button class="return-btn" onclick="openModal('${issue.issueId}')"><i class="fas fa-undo"></i> Return</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function calculateFine(dueDateStr, returnDateStr) {
+      //const res=await fetch('/default')
+      //let fine=await res.json()
+      pfine=fine||10;
+      const due = new Date(dueDateStr);
+      const ret = new Date(returnDateStr);
+      const diffTime = ret.getTime() - due.getTime();
+      const daysLate = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return daysLate > 0 ? daysLate * pfine : 0; 
+    }
+
+    let selectedIssueId = null;
+    let selectedFine = 0;
+
+    function openModal(issueId) {
+      selectedIssueId = issueId;
+      document.getElementById("modalOverlay").style.display = "block";
+      document.getElementById("confirmModal").style.display = "block";
+    }
+
+    function closeConfirm() {
+      document.getElementById("modalOverlay").style.display = "none";
+      document.getElementById("confirmModal").style.display = "none";
+    }
+
+    function showFineModal() {
+      closeConfirm();
+      
+      const issue = issuedBooks.find(i => i.ISSUE_ID == selectedIssueId);
+      
+      const book = books.find(b => b.BOOK_ID == issue.BOOK_ID);
+      const todayStr = new Date().toISOString().split('T')[0];
+      selectedFine = calculateFine(issue.dueDate, todayStr);
+      document.getElementById("modalBookName").innerText = `${book.TITLE} (ID: ${book.BOOK_ID})`;
+      document.getElementById("modalFineAmount").innerText = selectedFine > 0 ? `₹${selectedFine}` : 'No Fine';
+      document.getElementById("fineModal").style.display = "block";
+      /*fetch('/return_book',{
+        method:'POST',
+        headers: { 'Content-Type': 'application/json' },  
+        body: JSON.stringify({
+          issueId: selectedIssueId,
+          returnDate: todayStr,
+          fine: selectedFine
+        })
+      })
+      .then(res=>res.json())
+      .then(data=>{
+        closeFineModal();
+    if (data.status === 'success') {
+      showToast(selectedFine > 0 ? `Returned with ₹${selectedFine} fine.` : `Returned successfully!`);
+      // Optionally refresh table
+    } else {
+      showToast('Error while returning book', true);
+    }
+      })
+      .catch(err=>{showToast("Server error");})*/
+    }
+
+    function closeFineModal() {
+      document.getElementById("modalOverlay").style.display = "none";
+      document.getElementById("fineModal").style.display = "none";
+      selectedIssueId = null||0;
+      selectedFine = 0;
+    }
+
+function confirmReturn() {
+  const issue = issuedBooks.find(i => i.ISSUE_ID === selectedIssueId);
+  const today = new Date().toISOString().split('T')[0];
+
+  fetch('/return_book', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      issueId: selectedIssueId,
+      returnDate: today,
+      fine: selectedFine
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    closeFineModal();
+    if (data.status === 'success') {
+      showToast(selectedFine > 0 ? `Returned with ₹${selectedFine} fine.` : `Returned successfully!`);
+      window.location.reload();
+      // Optionally refresh table
+    } else {
+      showToast('Error while returning book', true);
+    }
+  })
+  .catch(error => {
+    console.error('Return error:', error);
+    showToast('Server error', true);
+  });
+}
+
+
+    renderReturnTable();
+    const dropdowns = document.querySelectorAll('.sidebar-btn.dropdown'); 
+    dropdowns.forEach(btn => { 
+      btn.addEventListener('click', (e) => {
+        // Don't toggle if clicking on a dropdown button that's already active
+        if (e.target.classList.contains('active')) {
+          return;
+        }
+        
+        dropdowns.forEach(b => { 
+          if (b !== btn) b.classList.remove('active'); 
+        }); 
+        btn.classList.toggle('active'); 
+      }); 
+    }); 
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.sidebar-btn.dropdown')) {
+        dropdowns.forEach(btn => {
+          btn.classList.remove('active');
+        });
+      }
+    });
+  async function loadIssuedBooks() {
+    try {
+      const response = await fetch('/get_issued_books');
+      let data = await response.json();
+      books=data;
+      issuedBooks=books;
+      
+      const tbody = document.getElementById('returnTableBody');
+      tbody.innerHTML = '';
+      
+      console.log(today);
+      books.forEach(issue => {
+        if (issue.STATUS.toLowerCase()=='issued' || issue.STATUS.toLowerCase()=='overdue') {
+        const tr = document.createElement('tr');
+        rdate = issue.RETURN_DATE;
+        console.log("issue date = ",issue.ISSUE_DATE);
+        console.log("return date = ",issue.RETURN_DATE);
+        fine=calculateFine(rdate,today);
+        console.log(fine);
+        issue.FINE=fine;
+        dover=fine/10;
+        tr.innerHTML = `
+          <td>${issue.ISSUE_ID}</td>
+          <td>${issue.BOOK_ID}</td>
+          <td>${issue.BOOK_TITLE}</td>
+          <td>${issue.STUDENT_ID}</td>
+          <td>${issue.STUDENT_NAME}</td>
+          <td>${formatDate(issue.ISSUE_DATE)}</td>
+          <td>${formatDate(issue.RETURN_DATE)}</td>
+          <td>${issue.ACTUAL_RETURN_DATE ? formatDate(issue.ACTUAL_RETURN_DATE) : '---'}</td>
+          <td>${formatDate(issue.RETURN_DATE)>formatDate(today)?`${issue.FINE}`:`-`}</td>
+          <td><span class="status-badge">${issue.STATUS}</span></td>
+          <td><button class="return-btn" onclick="openModal('${issue.ISSUE_ID}')"><i class="fas fa-undo"></i> Return</button></td>
+          <td>${formatDate(issue.RETURN_DATE)>formatDate(today)?
+          `-`:`<button class="return-btn" style="background-color:purple;" onclick="sendN(${issue.STUDENT_ID},'${formatDate(issue.RETURN_DATE)}')">Send Notice</button>`}</td>
+        `;
+        tbody.appendChild(tr);
+        }
+      });
+
+    } catch (err) {
+      console.error('Error fetching issued books:', err);
+    }
+  }
+  async function sendN(id,rdate){
+    let fine=calculateFine(rdate,today);
+    
+    const res=await fetch('/default')
+    const data=await res.json();
+    //pfine=data.FINE;
+    let dover=fine/pfine;
+    console.log("Fine=",fine)
+    console.log("Dover=",dover)
+    console.log("pfine=",pfine)
+    const subject= "YOUR DUE DATE IS OVER";
+    const notice=data.DNOTICE+"\n\nLate : "+dover+" Fine : "+fine;
+    fetch('/studentnotice',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({student_id:id,title:subject,content:notice})
+    })
+
+    console.log(subject);
+    console.log(notice);
+  }
+
+  // Call on page load
+  window.onload = loadIssuedBooks;
+
+
+  </script>
+</body>
+</html>

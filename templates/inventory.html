@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Book Inventory</title>
+  <link rel="stylesheet" href="{{url_for('static',filename='styles.css')}}">
+</head>
+<body>
+  <div class="dashboard">
+    <div class="sidebar">
+      <h2>Admin</h2>
+      <button class="sidebar-btn" onclick="nav()">View Profile</button>
+      <button class="sidebar-btn" onclick="nav2()">Manage Librarian</button>
+      <button class="sidebar-btn" onclick="nav4()">Book Inventory</button>
+      <button class="sidebar-btn " onclick="nav5()">Send Notice</button>
+      <button class="sidebar-btn logout-btn" onclick="window.location.href='/'">Logout </button>
+    </div>
+    <div class="content">
+      <div class="content-panel active">
+        <!-- Only Available Books Section -->
+        <div id="available-books" class="inventory-section">
+          <h3>Available Books</h3>
+          
+          <div class="summary-cards">
+            <div class="summary-card">
+              <h4>Total Books</h4>
+              <p id="totalBooksCount">0</p>
+            </div>
+            <div class="summary-card">
+              <h4>Available Books</h4>
+              <p id="availableBooksCount">0</p>
+            </div>
+            <div class="summary-card">
+              <h4>Issued Books</h4>
+              <p id="issuedBooksCount">0</p>
+            </div>
+          </div>
+          
+          <div class="filter-section">
+            <input type="text" id="bookSearch" placeholder="Search by title/author/ID" onkeyup="filtname()">
+            <select id="bookCategory" onchange="filt(this.value)">
+              <option value="">All Categories</option>
+              <option>Fiction</option>
+              <option>Non-Fiction</option>
+              <option>Science</option>
+              <option>History</option>
+              <option>Technology</option>
+            </select>
+            <select id="bookStatusFilter" onchange="filtstatus(this.value)">
+              <option value="">All Status</option>
+              <option>Available</option>
+              <option>Issued</option>
+            </select>
+            <button onclick="filter()">Filter</button>
+            <button onclick="window.location.reload()">Reset</button>
+          </div>
+
+          <table id="avaltable">
+            <thead>
+              <tr>
+                <th>Book ID</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>ISBN</th>
+                <th>Category</th>
+                <th>Year</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="availableBooksTable">
+             
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function nav() {
+      window.location.href = "/profile";
+    }
+    function nav2() {
+      window.location.href = "/manage";
+    }
+    function nav4() {
+      window.location.href = "/inventory";
+    }
+    function nav5() {
+      window.location.href = "/notice";
+    }
+    fetch('/book')
+    .then(response=>response.json())
+    .then(data=>{
+      const tbody=document.querySelector('#avaltable tbody')
+      let avalbooks=0;
+      data.book.forEach((book,index)=>{
+        const row=document.createElement('tr');
+        row.innerHTML=`
+        <td>${book.BOOK_ID}</td>
+        <td>${book.TITLE}</td>
+        <td>${book.AUTHOR}</td>
+        <td>${book.ISBN}</td>
+        <td>${book.CATEGORY}</td>
+        <td>${book.YEAR}</td>
+        <td>${book.STATUS}</td>
+        <td>
+          ${book.STATUS==='AVAILABLE'
+          ?`<p>Available</p>` 
+          :`<p>Issued</p>`
+        }
+        </td>
+        `
+        tbody.appendChild(row)
+        
+      })
+      const table=document.getElementById('avaltable');
+      const rows=table.getElementsByTagName('tr');
+      document.getElementById('totalBooksCount').innerText=rows.length-1;
+      
+      for(let i=1;i<rows.length;i++){
+        let cells=rows[i].getElementsByTagName('td');
+        let stat=cells[6]?.textContent.toLowerCase();
+        console.log(stat);
+        if ( stat=='available') {
+          avalbooks++;
+        }
+      }
+      document.getElementById('availableBooksCount').innerText=avalbooks;
+      document.getElementById('issuedBooksCount').innerText=(rows.length-1)-avalbooks;
+    })
+
+    function filt(value){
+      const table=document.getElementById('avaltable');
+      const rows=table.getElementsByTagName('tr');
+      
+      for(let i=1;i<rows.length;i++){
+        const cells=rows[i].getElementsByTagName('td');
+        const cat=cells[4]?.textContent.toLowerCase();
+        console.log(cat)
+        if(cat && cat.includes(value.toLowerCase())){
+          rows[i].style.display="";
+        }
+        else{
+          rows[i].style.display="none";
+        }
+      }
+    }
+   function filtname(){
+    let bname=document.getElementById('bookSearch').value.toLowerCase();
+    let table=document.getElementById('avaltable');
+    let rows=table.getElementsByTagName('tr');
+    for(let i=1;i<rows.length;i++){
+      let cells=rows[i].getElementsByTagName('td');
+      let bid=cells[0]?.textContent.toLowerCase();
+      let title=cells[1]?.textContent.toLowerCase();
+      let author=cells[2]?.textContent.toLowerCase();
+      if (bid && bid.includes(bname) || title && title.includes(bname) || author && author.includes(bname)) {
+        rows[i].style.display="";
+      }
+      else{
+        rows[i].style.display="none";
+      }
+    }
+   }
+
+   function filtstatus(value){
+      let table=document.getElementById('avaltable');
+      let rows=table.getElementsByTagName('tr');
+
+      for(let i=1;i<rows.length;i++){
+        let cells=rows[i].getElementsByTagName('td');
+        let stat=cells[6]?.textContent.toLowerCase();
+        if (stat && stat.includes(value.toLowerCase())) {
+          rows[i].style.display="";
+        }
+        else{
+          rows[i].style.display="none";
+        }
+      }
+   }
+   function filter(){
+    let table=document.getElementById('avaltable');
+    let rows=table.getElementsByTagName('tr');
+    let bdet=document.getElementById('bookSearch').value.toLowerCase();
+    let category=document.getElementById('bookCategory').value.toLowerCase();
+    let status=document.getElementById('bookStatusFilter').value.toLowerCase();
+
+    for(let i=1;i<rows.length;i++){
+        let cells=rows[i].getElementsByTagName('td');
+        let bid=cells[0]?.textContent.toLowerCase();
+        let bname=cells[1]?.textContent.toLowerCase();
+        let author=cells[2]?.textContent.toLowerCase();
+        let cat=cells[4]?.textContent.toLowerCase();
+        let stat=cells[6]?.textContent.toLowerCase();
+        if (((bid && bid==bdet) || (bname && bname==bdet) || (author && author.includes(bdet))) && (cat && cat.includes(category)) && (stat && stat.includes(status))) {
+          rows[i].style.display="";
+        }
+        else{
+          rows[i].style.display="none";
+        }
+      }
+   }
+  </script>
+</body>
+</html>

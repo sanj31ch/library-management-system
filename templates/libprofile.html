@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Librarian Profile - GP Library</title>
+  <link rel="stylesheet" href="{{url_for('static',filename='styles2.css')}}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body>
+  <div class="blur-bg"></div>
+
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-title"><i class="fas fa-book-open"></i> GP Library</div>
+      <button class="sidebar-btn home-btn" onclick="window.location.href='/libhome'"><i class="fas fa-home"></i> Home</button>
+      <button class="sidebar-btn view-profile-btn" onclick="window.location.href='/libprofile'"><i class="fas fa-id-card"></i> View Profile</button>
+      <button class="sidebar-btn view-books-btn" onclick="window.location.href='/libbooks'"><i class="fas fa-book-reader"></i> View Books</button>
+      <button class="sidebar-btn book-history-btn" onclick="window.location.href='/libhistory'"><i class="fas fa-history"></i> Book History</button>
+      <button class="sidebar-btn students-btn" onclick="window.location.href='/libstudents'"><i class="fas fa-users"></i> Students</button>
+      <button class="sidebar-btn notice-btn dropdown"><i class="fas fa-bell"></i> Notice</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libsend_notice'"><i class="fas fa-paper-plane"></i> Send Notice</button>
+        <button onclick="window.location.href='/libview_notice'"><i class="fas fa-eye"></i> View Notices</button>
+      </div>
+      <button class="sidebar-btn attendance-btn dropdown"><i class="fas fa-calendar-check"></i> Attendance</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libmark_attendence'"><i class="fas fa-user-check"></i> Mark Attendance</button>
+        <button onclick="window.location.href='/libview_attendance'"><i class="fas fa-eye"></i> View Attendance</button>
+      </div>
+      <button class="sidebar-btn settings-btn dropdown active"><i class="fas fa-cog"></i> Settings</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/fine_settings'"><i class="fas fa-rupee-sign"></i> Fine Settings</button>
+        <button onclick="window.location.href='/subscription_settings'"><i class="fas fa-id-card"></i> Subscription Settings</button>
+        <!--<button onclick="window.location.href='/holiday_settings'"><i class="fas fa-calendar-times"></i> Holiday Settings</button>
+        <button onclick="window.location.href='/theme_settings'"><i class="fas fa-palette"></i> Theme Settings</button> -->
+      </div>
+    </div>
+    <button class="logout-btn" onclick="window.location.href='/'"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+
+  <div class="dashboard" id="dashboard-content">
+    <div class="home-layout"> 
+      <h1><i class="fas fa-id-card"></i> Librarian Profile</h1> 
+      <div class="profile-container">
+        <div class="profile-header">
+          <div class="profile-avatar">
+            <i class="fas fa-user-circle"></i>
+          </div>
+          <div class="profile-info">
+            <h2>Library Admin</h2>
+            <p>Librarian</p>
+          </div>
+        </div>
+        
+        <div class="profile-details">
+          <div class="detail-item">
+            <span class="detail-label">ID:</span>
+            <span class="detail-value" id="librarianId">{{id}}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Name:</span>
+            <span class="detail-value" id="librarianName">{{name}}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Email:</span>
+            <span class="detail-value" id="librarianEmail">{{email}}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Mobile:</span>
+            <span class="detail-value" id="librarianMobile">{{mobile}}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Gender:</span>
+            <span class="detail-value" id="librarianGender">{{gender}}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Qualification:</span>
+            <span class="detail-value" id="librarianQualify">{{qualify}}</span>
+          </div>
+        </div>
+        
+        <div class="profile-actions">
+          <button class="edit-profile-btn" onclick="enableProfileEdit()">
+            <i class="fas fa-edit"></i> Edit Profile
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function enableProfileEdit() {
+      const name = document.getElementById("librarianName").innerText;
+      const email = document.getElementById("librarianEmail").innerText;
+      const mobile = document.getElementById("librarianMobile").innerText;
+      const qualify = document.getElementById("librarianQualify").innerText;
+
+      document.getElementById("dashboard-content").innerHTML = ` 
+        <div class="home-layout"> 
+          <h1><i class="fas fa-id-card"></i> Edit Profile</h1> 
+          <form class="profile-form" id="editProfileForm" onsubmit="event.preventDefault();"> 
+            <div class="form-group"><label>Name:</label><input type="text" id="profileName" value="${name}" /></div> 
+            <div class="form-group"><label>Mobile Number:</label><input type="text" id="profileMobile" value="${mobile}" /></div> 
+            <div class="form-group"><label>Email:</label><input type="email" id="profileEmail" value="${email}" /></div> 
+            <div class="form-group"><label>Qualification:</label><input type="text" id="profileQualify" value="${qualify}" /></div> 
+            <div class="form-actions"> 
+              <button type="submit" class="update-btn" onclick="saveProfile()">Save Changes</button> 
+              <button type="button" class="back-btn" onclick="window.location.href='/libprofile'">Cancel</button> 
+            </div> 
+          </form> 
+        </div>`;
+    }
+
+    function saveProfile() {
+      const name = document.getElementById('profileName').value;
+      const mobile = document.getElementById('profileMobile').value;
+      const email = document.getElementById('profileEmail').value;
+      const qualify = document.getElementById('profileQualify').value;
+
+      fetch('/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          Role: 'LIBRARIAN',
+          name,
+          mobile,
+          email,
+          qualify
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data === 'Updated') {
+          alert("Profile updated successfully!");
+          window.location.href = '/libprofile';
+        } else {
+          alert("Failed to update profile");
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Server error while updating profile.");
+      });
+    }
+    const dropdowns = document.querySelectorAll('.sidebar-btn.dropdown'); 
+    dropdowns.forEach(btn => { 
+      btn.addEventListener('click', (e) => {
+        // Don't toggle if clicking on a dropdown button that's already active
+        if (e.target.classList.contains('active')) {
+          return;
+        }
+        
+        dropdowns.forEach(b => { 
+          if (b !== btn) b.classList.remove('active'); 
+        }); 
+        btn.classList.toggle('active'); 
+      }); 
+    }); 
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.sidebar-btn.dropdown')) {
+        dropdowns.forEach(btn => {
+          btn.classList.remove('active');
+        });
+      }
+    });
+  </script>
+</body>
+</html>

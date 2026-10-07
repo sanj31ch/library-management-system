@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fine History - GP Library</title>
+  <link rel="stylesheet" href="{{url_for('static',filename='styles2.css')}}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    /* Tabbed interface styles */
+    .tab-container {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #444;
+    }
+    
+    .tab {
+      padding: 12px 20px;
+      cursor: pointer;
+      background-color: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-top-left-radius: 5px;
+      border-top-right-radius: 5px;
+      margin-right: 5px;
+      color: #ddd;
+      font-weight: bold;
+      transition: all 0.3s;
+    }
+    
+    .tab.active {
+      background-color: rgba(255, 255, 255, 0.2);
+      color: white;
+      border-bottom: 3px solid #3498db;
+    }
+    
+    .tab:hover:not(.active) {
+      background-color: rgba(255, 255, 255, 0.15);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    /* Additional styles for the fine management system */
+    .manage-fines-section {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 30px;
+    }
+    
+    .pay-btn {
+      background-color: #2ecc71;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background-color 0.3s;
+    }
+    
+    .pay-btn:hover {
+      background-color: #27ae60;
+    }
+    
+    .paid-text {
+      color: #2ecc71;
+      font-weight: bold;
+    }
+    
+    .status-badge {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .status-badge.paid {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    
+    .status-badge.pending {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+    
+    .stats-container {
+      display: flex;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    
+    .stat-card {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 8px;
+      flex: 1;
+    }
+    
+    .stat-card h3 {
+      margin-top: 0;
+      font-size: 16px;
+      color: #ddd;
+    }
+    
+    .stat-card .value {
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+    }
+    
+    .transaction-id {
+      font-family: monospace;
+      font-size: 12px;
+      color: #3498db;
+    }
+  </style>
+</head>
+<body>
+  <div class="blur-bg"></div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-title"><i class="fas fa-book-open"></i> GP Library</div>
+      <button class="sidebar-btn home-btn" onclick="window.location.href='/libhome'"><i class="fas fa-home"></i> Home</button>
+      <button class="sidebar-btn view-profile-btn" onclick="window.location.href='/libprofile'"><i class="fas fa-id-card"></i> View Profile</button>
+      <button class="sidebar-btn view-books-btn" onclick="window.location.href='/libbooks'"><i class="fas fa-book-reader"></i> View Books</button>
+      <button class="sidebar-btn book-history-btn" onclick="window.location.href='/libhistory'"><i class="fas fa-history"></i> Book History</button>
+      <button class="sidebar-btn students-btn" onclick="window.location.href='/libstudents'"><i class="fas fa-users"></i> Students</button>
+      <button class="sidebar-btn notice-btn dropdown"><i class="fas fa-bell"></i> Notice</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libsend_notice'"><i class="fas fa-paper-plane"></i> Send Notice</button>
+        <button onclick="window.location.href='/libview_notice'"><i class="fas fa-eye"></i> View Notices</button>
+      </div>
+      <button class="sidebar-btn attendance-btn dropdown"><i class="fas fa-calendar-check"></i> Attendance</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libmark_attendence'"><i class="fas fa-user-check"></i> Mark Attendance</button>
+        <button onclick="window.location.href='/libview_attendance'"><i class="fas fa-eye"></i> View Attendance</button>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="window.location.href='/'"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+
+  <div class="dashboard" id="dashboard-content">
+    <div class="home-layout">
+      <h1><i class="fas fa-rupee-sign"></i> Fine Management</h1>
+      
+      <!-- Tab Navigation -->
+      <div class="tab-container">
+        <button class="tab active" onclick="openTab('summary-tab')">
+          <i class="fas fa-chart-pie"></i> Fine Summary
+        </button>
+        <button class="tab" onclick="openTab('manage-tab')">
+          <i class="fas fa-cog"></i> Manage Fines
+        </button>
+        <button class="tab" onclick="openTab('history-tab')">
+          <i class="fas fa-history"></i> Fine History
+        </button>
+      </div>
+      
+      <!-- Fine Summary Tab -->
+      <div id="summary-tab" class="tab-content active">
+        <div class="stats-container">
+          <div class="stat-card">
+            <h3>Today's Fine Collection</h3>
+            <div class="value" id="todayFineTotal">₹0</div>
+          </div>
+          <div class="stat-card">
+            <h3>Pending Fines</h3>
+            <div class="value" id="pendingFineTotal">₹0</div>
+          </div>
+          <div class="stat-card">
+            <h3>Total Fine Collection</h3>
+            <div class="value" id="totalFineAmount">₹0</div>
+          </div>
+        </div>
+        
+        <div class="form-actions" style="margin-top: 20px;">
+          <button type="button" class="update-btn" onclick="generateReport()">
+            <i class="fas fa-file-pdf"></i> Generate Report
+          </button>
+          <button type="button" class="back-btn" onclick="window.location.href='/libhome'">Back to Home</button>
+        </div>
+      </div>
+      
+      <!-- Manage Fines Tab -->
+      <div id="manage-tab" class="tab-content">
+        <div class="manage-fines-section">
+          <div class="filter-container">
+            <div class="filter-group">
+              <label>Status:</label>
+              <select id="manageFineStatusFilter">
+                <option value="all">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="paid">Paid</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Search:</label>
+              <input type="text" id="manageSearchInput" placeholder="Search by student name or ID..." />
+            </div>
+          </div>
+
+          <div class="data-table-container">
+            <table class="data-table" id="manageFineTable">
+              <thead>
+                <tr>
+                  <th>Fine ID</th>
+                  <th>Student ID</th>
+                  <th>Student Name</th>
+                  <th>Book</th>
+                  <th>Due Date</th>
+                  <th>Return Date</th>
+                  <th>Amount (₹)</th>
+                  <th>Status</th>
+                  <th>Transaction ID</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="manageFineTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+        
+        <div class="form-actions" style="margin-top: 20px;">
+          <button type="button" class="back-btn" onclick="window.location.href='/libhome'">Back to Home</button>
+        </div>
+      </div>
+      
+      <!-- Fine History Tab -->
+      <div id="history-tab" class="tab-content">
+        <div class="filter-container">
+          <div class="filter-group">
+            <label>Status:</label>
+            <select id="fineStatusFilter">
+              <option value="all">All</option>
+              <option value="paid">Paid</option>
+              <option value="pending">Pending</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Date Range:</label>
+            <input type="date" id="startDate" />
+            <span style="color: white;">to</span>
+            <input type="date" id="endDate" />
+          </div>
+          <div class="filter-group">
+            <label>Search:</label>
+            <input type="text" id="searchInput" placeholder="Search student/book..." />
+          </div>
+        </div>
+
+        <div class="data-table-container">
+          <table class="data-table" id="fineTable">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Book</th>
+                <th>Issue ID</th>
+                <th>Due Date</th>
+                <th>Return Date</th>
+                <th>Reason</th>
+                <th>Fine (₹)</th>
+                <th>Status</th>
+                <th>Transaction ID</th>
+              </tr>
+            </thead>
+            <tbody id="fineTableBody"></tbody>
+          </table>
+        </div>
+        
+        <div class="form-actions" style="margin-top: 20px;">
+          <button type="button" class="back-btn" onclick="window.location.href='/libhome'">Back to Home</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tab functionality
+    function openTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+        
+        // Load data when switching tabs
+        if (tabId === 'summary-tab') {
+            loadSummaryStats();
+        } else if (tabId === 'manage-tab') {
+            loadFines('manage');
+        } else if (tabId === 'history-tab') {
+            loadFines('history');
+        }
+    }
+
+    // Format date to Indian format
+    function formatDate(dateString) {
+        if (!dateString || dateString === 'None') return '-';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    // Format currency with 2 decimal places
+    function formatCurrency(amount) {
+        return '₹' + parseFloat(amount || 0).toFixed(2);
+    }
+
+    // Load summary statistics
+    async function loadSummaryStats() {
+        try {
+            const response = await fetch('/fine_stats');
+            if (!response.ok) throw new Error('Failed to fetch stats');
+            
+            const data = await response.json();
+            
+            document.getElementById('todayFineTotal').textContent = formatCurrency(data.today_total);
+            document.getElementById('pendingFineTotal').textContent = formatCurrency(data.pending_total);
+            document.getElementById('totalFineAmount').textContent = formatCurrency(data.total_amount);
+        } catch (error) {
+            console.error('Error loading stats:', error);
+            alert('Failed to load fine statistics');
+        }
+    }
+
+    // Load fines data
+    async function loadFines(type) {
+        try {
+            // Get filter values based on which table we're loading
+            const statusFilter = document.getElementById(`${type === 'manage' ? 'manageFineStatusFilter' : 'fineStatusFilter'}`).value;
+            const searchInput = document.getElementById(`${type === 'manage' ? 'manageSearchInput' : 'searchInput'}`).value;
+            const startDate = type === 'history' ? document.getElementById('startDate').value : null;
+            const endDate = type === 'history' ? document.getElementById('endDate').value : null;
+            
+            // Build query parameters
+            const params = new URLSearchParams();
+            if (statusFilter !== 'all') params.append('status', statusFilter);
+            if (searchInput) params.append('search', searchInput);
+            if (startDate) params.append('startDate', startDate);
+            if (endDate) params.append('endDate', endDate);
+            
+            const response = await fetch(`/fines?${params.toString()}`);
+            if (!response.ok) throw new Error('Failed to fetch fines');
+            
+            const fines = await response.json();
+            
+            // Clear table
+            const tableBody = document.getElementById(`${type === 'manage' ? 'manageFineTableBody' : 'fineTableBody'}`);
+            tableBody.innerHTML = '';
+            
+            // Populate table
+            fines.forEach(fine => {
+                const status = fine.PAID ? 'paid' : 'pending';
+                const statusText = fine.PAID ? 'Paid' : 'Pending';
+                
+                if (type === 'history') {
+                    // History table row
+                    const row = `
+                        <tr data-status="${status}" data-date="${fine.RETURN_DATE || ''}">
+                            <td>${fine.SNAME || 'N/A'} (${fine.STUDENT_ID || 'N/A'})</td>
+                            <td>${fine.BOOK_TITLE || 'N/A'}</td>
+                            <td>${fine.ISSUE_ID || 'N/A'}</td>
+                            <td>${formatDate(fine.DUE_DATE)}</td>
+                            <td>${formatDate(fine.RETURN_DATE)}</td>
+                            <td>${fine.REASON || 'Late return'}</td>
+                            <td>${formatCurrency(fine.FINE_AMOUNT)}</td>
+                            <td><span class="status-badge ${status}">${statusText}</span></td>
+                            <td class="transaction-id">${fine.TRANSACTION_ID || '-'}</td>
+                        </tr>
+                    `;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                } else {
+                    // Manage table row
+                    const row = `
+                        <tr data-status="${status}" data-student="${fine.SNAME || ''}" data-id="${fine.STUDENT_ID || ''}">
+                            <td>F${fine.FINE_ID}</td>
+                            <td>${fine.STUDENT_ID || 'N/A'}</td>
+                            <td>${fine.SNAME || 'N/A'}</td>
+                            <td>${fine.BOOK_TITLE || 'N/A'}</td>
+                            <td>${formatDate(fine.DUE_DATE)}</td>
+                            <td>${formatDate(fine.RETURN_DATE)}</td>
+                            <td>${formatCurrency(fine.FINE_AMOUNT)}</td>
+                            <td><span class="status-badge ${status}">${statusText}</span></td>
+                            <td class="transaction-id">${fine.TRANSACTION_ID || '-'}</td>
+                            <td>
+                                ${!fine.PAID ? 
+                                    `<button class="pay-btn" onclick="markAsPaid(${fine.FINE_ID}, this)">
+                                        <i class="fas fa-check-circle"></i> Mark Paid
+                                    </button>` : 
+                                    '<span class="paid-text">Paid</span>'}
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.insertAdjacentHTML('beforeend', row);
+                }
+            });
+            
+        } catch (error) {
+            console.error(`Error loading ${type} fines:`, error);
+            alert(`Failed to load ${type === 'manage' ? 'manage' : 'history'} fines`);
+        }
+    }
+
+    // Mark fine as paid
+    async function markAsPaid(fineId, button) {
+        if (!confirm('Are you sure you want to mark this fine as paid?')) return;
+        
+        try {
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            
+            const response = await fetch(`/mark_paid/${fineId}`, {
+                method: 'POST'
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to mark fine as paid');
+            }
+            
+            const result = await response.json();
+            
+            // Update the row directly without reloading the whole table
+            const row = button.closest('tr');
+            row.dataset.status = 'paid';
+            row.querySelector('.status-badge').className = 'status-badge paid';
+            row.querySelector('.status-badge').textContent = 'Paid';
+            row.querySelector('.transaction-id').textContent = result.transaction_id;
+            row.querySelector('td:last-child').innerHTML = '<span class="paid-text">Paid</span>';
+            
+            // Update the summary stats
+            loadSummaryStats();
+            
+        } catch (error) {
+            console.error('Error marking fine as paid:', error);
+            alert(error.message || 'Failed to mark fine as paid');
+            if (button) {
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-check-circle"></i> Mark Paid';
+            }
+        }
+    }
+
+    // Generate comprehensive PDF report
+    async function generateReport() {
+        try {
+            // First get all fines data
+            const response = await fetch('/fines?status=all');
+            if (!response.ok) throw new Error('Failed to fetch fines for report');
+            const fines = await response.json();
+            
+            // Get stats
+            const statsResponse = await fetch('/fine_stats');
+            if (!statsResponse.ok) throw new Error('Failed to fetch stats for report');
+            const stats = await statsResponse.json();
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Report header
+            doc.setFontSize(18);
+            doc.setTextColor(40);
+            doc.text('GP Library - Fine Management Report', 105, 20, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.text(`Generated on: ${new Date().toLocaleDateString('en-IN')}`, 105, 30, { align: 'center' });
+            
+            // Summary section
+            doc.setFontSize(14);
+            doc.text('Summary', 14, 40);
+            doc.setFontSize(12);
+            
+            doc.text(`Today's Collection: ${formatCurrency(stats.today_total)}`, 14, 50);
+            doc.text(`Pending Fines: ${formatCurrency(stats.pending_total)}`, 14, 60);
+            doc.text(`Total Fine Amount: ${formatCurrency(stats.total_amount)}`, 14, 70);
+            
+            // Add a line separator
+            doc.setDrawColor(200);
+            doc.line(14, 75, 196, 75);
+            
+            // Fine Details section
+            doc.setFontSize(14);
+            doc.text('Fine Details', 14, 85);
+            
+            // Prepare data for the table
+            const fineRows = fines.map(fine => [
+                `${fine.SNAME || 'N/A'} (${fine.STUDENT_ID || 'N/A'})`,
+                fine.BOOK_TITLE || 'N/A',
+                fine.ISSUE_ID || 'N/A',
+                formatDate(fine.DUE_DATE),
+                formatDate(fine.RETURN_DATE),
+                fine.REASON || 'Late return',
+                formatCurrency(fine.FINE_AMOUNT),
+                fine.PAID ? 'Paid' : 'Pending',
+                fine.TRANSACTION_ID || '-'
+            ]);
+            
+            const headers = ['Student', 'Book', 'Issue ID', 'Due Date', 'Return Date', 'Reason', 'Fine', 'Status', 'Transaction ID'];
+            
+            doc.autoTable({
+                startY: 90,
+                head: [headers],
+                body: fineRows,
+                margin: { left: 14 },
+                styles: { 
+                    fontSize: 9,
+                    cellPadding: 3,
+                    overflow: 'linebreak'
+                },
+                headStyles: { 
+                    fillColor: [46, 134, 193],
+                    textColor: 255
+                },
+                alternateRowStyles: {
+                    fillColor: [240, 240, 240]
+                }
+            });
+            
+            // Footer
+            const pageCount = doc.internal.getNumberOfPages();
+            for(let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(10);
+                doc.setTextColor(150);
+                doc.text('Page ' + i + ' of ' + pageCount, 105, 285, { align: 'center' });
+                doc.text('GP Library Management System', 195, 285, { align: 'right' });
+            }
+            
+            // Save the report
+            doc.save(`Fine_Report_${new Date().toISOString().slice(0,10)}.pdf`);
+            
+        } catch (error) {
+            console.error('Error generating report:', error);
+            alert('Failed to generate report: ' + error.message);
+        }
+    }
+
+    // Filter functions
+    function applyFilters() {
+        const status = document.getElementById('fineStatusFilter').value;
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const start = document.getElementById('startDate').value;
+        const end = document.getElementById('endDate').value;
+
+        document.querySelectorAll('#fineTableBody tr').forEach(row => {
+            const rowStatus = row.dataset.status;
+            const rowDate = row.dataset.date;
+            const text = row.textContent.toLowerCase();
+
+            const statusMatch = status === 'all' || rowStatus === status;
+            const dateMatch = (!start || rowDate >= start) && (!end || rowDate <= end);
+            const searchMatch = !search || text.includes(search);
+
+            row.style.display = statusMatch && dateMatch && searchMatch ? '' : 'none';
+        });
+    }
+
+    function applyManageFilters() {
+        const status = document.getElementById('manageFineStatusFilter').value;
+        const search = document.getElementById('manageSearchInput').value.toLowerCase();
+
+        document.querySelectorAll('#manageFineTableBody tr').forEach(row => {
+            const rowStatus = row.dataset.status;
+            const studentName = (row.dataset.student || '').toLowerCase();
+            const studentId = (row.dataset.id || '').toLowerCase();
+            const text = row.textContent.toLowerCase();
+
+            const statusMatch = status === 'all' || rowStatus === status;
+            const searchMatch = !search || 
+                             studentName.includes(search) || 
+                             studentId.includes(search) || 
+                             text.includes(search);
+
+            row.style.display = statusMatch && searchMatch ? '' : 'none';
+        });
+    }
+
+    // Event listeners for filters
+    document.getElementById('fineStatusFilter').addEventListener('change', applyFilters);
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+    document.getElementById('startDate').addEventListener('change', applyFilters);
+    document.getElementById('endDate').addEventListener('change', applyFilters);
+
+    document.getElementById('manageFineStatusFilter').addEventListener('change', applyManageFilters);
+    document.getElementById('manageSearchInput').addEventListener('input', applyManageFilters);
+
+    // Initialize the page
+    window.onload = function() {
+        loadSummaryStats();
+        loadFines('history');
+        openTab('summary-tab');
+        
+        // Set default dates for filters
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('startDate').value = today;
+        document.getElementById('endDate').value = today;
+    };
+    
+    // Dropdown menu functionality
+    const dropdowns = document.querySelectorAll('.sidebar-btn.dropdown'); 
+    dropdowns.forEach(btn => { 
+        btn.addEventListener('click', (e) => {
+            if (e.target.classList.contains('active')) {
+                return;
+            }
+            
+            dropdowns.forEach(b => { 
+                if (b !== btn) b.classList.remove('active'); 
+            }); 
+            btn.classList.toggle('active'); 
+        }); 
+    }); 
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.sidebar-btn.dropdown')) {
+            dropdowns.forEach(btn => {
+                btn.classList.remove('active');
+            });
+        }
+    });
+</script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+</body>
+</html>

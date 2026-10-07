@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GP Library Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="{{url_for('static',filename='styles2.css')}}">
+  <style>
+    select {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+    option {
+      background-color: #333;
+      color: white;
+    }
+    
+    /* Main Dashboard Layout */
+    .dashboard-container {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+    
+    /* Welcome Card */
+    .welcome-card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(15px);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: white;
+    }
+    
+    .welcome-card h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .welcome-card p {
+      color: rgba(255,255,255,0.8);
+      font-size: 1.1rem;
+      margin-bottom: 0;
+    }
+    
+    /* Statistics Card */
+    .stats-card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(15px);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: white;
+    }
+    
+    .stats-card h2 {
+      font-size: 1.8rem;
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      color: white;
+    }
+    
+    /* Enhanced Stat Cards */
+    .enhanced-stat-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+      border: none;
+      z-index: 1;
+    }
+    
+    .enhanced-stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05));
+      z-index: -1;
+    }
+    
+    .enhanced-stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+    }
+    
+    .enhanced-stat-card .value {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    
+    .enhanced-stat-card .icon {
+      font-size: 2rem;
+      margin-bottom: 15px;
+      opacity: 0.8;
+    }
+    
+    /* Gradient backgrounds for each stat card */
+    .stat-total-books { background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 25px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease; }
+    .stat-available-books { 
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 25px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+     }
+    .stat-issued-books { 
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 25px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+     }
+    .stat-registered-students { 
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 25px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+     }
+    .stat-notifications { 
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 25px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+     }
+    .stat-pending-requests { 
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 25px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+     }
+    .stat-fines-collected { 
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 25px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+     }
+    .stat-pending-fines { 
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 25px;
+      text-align: center;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+    }
+    
+    /* Quick Actions Card */
+    .quick-actions-card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(15px);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: white;
+    }
+    
+    .quick-actions-card h2 {
+      font-size: 1.8rem;
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      color: white;
+    }
+    
+    /* Adjust cards grid */
+    .cards {
+      padding-left: 0 !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="blur-bg"></div>
+
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-title"><i class="fas fa-book-open"></i> GP Library</div>
+      <button class="sidebar-btn home-btn" onclick="window.location.href='/libhome'"><i class="fas fa-home"></i> Home</button>
+      <button class="sidebar-btn view-profile-btn" onclick="window.location.href='/libprofile'"><i class="fas fa-id-card"></i> View Profile</button>
+      <button class="sidebar-btn view-books-btn" onclick="window.location.href='/libbooks'"><i class="fas fa-book-reader"></i> View Books</button>
+      <button class="sidebar-btn book-history-btn" onclick="window.location.href='/libhistory'"><i class="fas fa-history"></i> Book History</button>
+      <button class="sidebar-btn students-btn" onclick="window.location.href='/libstudents'"><i class="fas fa-users"></i> Students</button>
+      <button class="sidebar-btn notice-btn dropdown"><i class="fas fa-bell"></i> Notice</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libsend_notice'"><i class="fas fa-paper-plane"></i> Send Notice</button>
+        <button onclick="window.location.href='/libview_notice'"><i class="fas fa-eye"></i> View Notices</button>
+      </div>
+      <button class="sidebar-btn attendance-btn dropdown"><i class="fas fa-calendar-check"></i> Attendance</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libmark_attendence'"><i class="fas fa-user-check"></i> Mark Attendance</button>
+        <button onclick="window.location.href='/libview_attendance'"><i class="fas fa-eye"></i> View Attendance</button>
+      </div>
+      <button class="sidebar-btn settings-btn dropdown active"><i class="fas fa-cog"></i> Settings</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/fine_settings'"><i class="fas fa-rupee-sign"></i> Fine Settings</button>
+        <button onclick="window.location.href='/subscription_settings'"><i class="fas fa-id-card"></i> Subscription Settings</button>
+        <!--<button onclick="window.location.href='/holiday_settings'"><i class="fas fa-calendar-times"></i> Holiday Settings</button>
+        <button onclick="window.location.href='/theme_settings'"><i class="fas fa-palette"></i> Theme Settings</button> -->
+      </div>
+    </div>
+    <button class="logout-btn" onclick="window.location.href='/'"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+
+  <div class="dashboard" id="dashboard-content">
+    <div class="dashboard-container">
+      <!-- Welcome Card -->
+      <div class="welcome-card">
+        <h1><i class="fas fa-university"></i> Welcome to GP Library</h1>
+        <p>Get quick insights and access library functions from this dashboard.</p>
+      </div>
+      
+      <!-- Statistics Card -->
+      <div class="stats-card">
+        <h2><i class="fas fa-chart-pie"></i> Library Statistics</h2>
+        <div class="stats-container">
+          <div class="enhanced-stat-card stat-total-books">
+            <div class="icon"><i class="fas fa-book"></i></div>
+            <h3>Total Books</h3>
+            <div class="value">{{tbooks}}</div>
+            <div class="change"><i class="fas fa-arrow-up"></i> {{titles}} Titles </div>
+          </div>
+          <div class="enhanced-stat-card stat-available-books">
+            <div class="icon"><i class="fas fa-book-open"></i></div>
+            <h3>Available Books</h3>
+            <div class="value">{{abooks}}</div>
+            <div class="change"><i class="fas fa-arrow-up"></i> {{avail}} Today </div>
+          </div>
+          <div class="enhanced-stat-card stat-issued-books">
+            <div class="icon"><i class="fas fa-exchange-alt"></i></div>
+            <h3>Issued Books</h3>
+            <div class="value">{{ibooks}}</div>
+            <div class="change"><i class="fas fa-arrow-down negative"></i> </div>
+          </div>
+          <div class="enhanced-stat-card stat-registered-students">
+            <div class="icon"><i class="fas fa-users"></i></div>
+            <h3>Registered Students</h3>
+            <div class="value">{{tstud}}</div>
+            <div class="change"><i class="fas fa-arrow-up"></i> </div>
+          </div>
+        </div>
+        
+        <div class="stats-container">
+          <div class="enhanced-stat-card stat-notifications">
+            <div class="icon"><i class="fas fa-bell"></i></div>
+            <h3>Unread Notifications</h3>
+            <div class="value">{{unread}}</div>
+            <div class="change"><i class="fas fa-arrow-up"></i> </div>
+          </div>
+          <div class="enhanced-stat-card stat-pending-requests">
+            <div class="icon"><i class="fas fa-clock"></i></div>
+            <h3>Pending Requests</h3>
+            <div class="value">{{pending}}</div>
+            <div class="change"><i class="fas fa-arrow-down negative"></i> </div>
+          </div>
+          <div class="enhanced-stat-card stat-fines-collected">
+            <div class="icon"><i class="fas fa-rupee-sign"></i></div>
+            <h3>Fines Collected</h3>
+            <div class="value">{{fines}}</div>
+            <div class="change"><i class="fas fa-arrow-up"></i> </div>
+          </div>
+          <div class="enhanced-stat-card stat-pending-fines">
+            <div class="icon"><i class="fas fa-exclamation-circle"></i></div>
+            <h3>Pending Fines</h3>
+            <div class="value">₹{{pfines}}</div>
+            <div class="change"><i class="fas fa-arrow-down negative"></i></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Quick Actions Card -->
+      <div class="quick-actions-card">
+        <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+        <div class="cards">
+          <div class="card" onclick="window.location.href='/libadd_book'"><i class="fas fa-book-medical"></i><span>Add Book</span></div>
+          <div class="card" onclick="window.location.href='/libaddstudent'"><i class="fas fa-user-plus"></i><span>Add Student</span></div>
+          <div class="card" onclick="window.location.href='/libanalytics'"><i class="fas fa-chart-line"></i><span>Analytics</span></div>
+          <div class="card" onclick="window.location.href='/libissue'"><i class="fas fa-book"></i><span>Issue Book</span></div>
+          <div class="card" onclick="window.location.href='/libreturnbook'"><i class="fas fa-undo"></i><span>Return Book</span></div>
+          <div class="card" onclick="window.location.href='/libfine'"><i class="fas fa-rupee-sign"></i><span>Fine</span></div>
+          <div class="card" onclick="window.location.href='/addsubscription'"><i class="fas fa-book-medical"></i><span>Subscription</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toast-message">Book added successfully!</span>
+  </div>
+
+  <script>
+    // Toast notification function
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      toastMessage.textContent = message;
+      
+      if (isError) {
+        toast.classList.add('error');
+      } else {
+        toast.classList.remove('error');
+      }
+      
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Initialize dropdown functionality
+    const dropdowns = document.querySelectorAll('.sidebar-btn.dropdown'); 
+    dropdowns.forEach(btn => { 
+      btn.addEventListener('click', (e) => {
+        // Don't toggle if clicking on a dropdown button that's already active
+        if (e.target.classList.contains('active')) {
+          return;
+        }
+        
+        dropdowns.forEach(b => { 
+          if (b !== btn) b.classList.remove('active'); 
+        }); 
+        btn.classList.toggle('active'); 
+      }); 
+    }); 
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.sidebar-btn.dropdown')) {
+        dropdowns.forEach(btn => {
+          btn.classList.remove('active');
+        });
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Issue Book - GP Library</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet" href="{{url_for('static',filename='styles2.css')}}">
+</head>
+<body>
+  <div class="blur-bg"></div>
+
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-title"><i class="fas fa-book-open"></i> GP Library</div>
+      <button class="sidebar-btn home-btn" onclick="window.location.href='/libhome'"><i class="fas fa-home"></i> Home</button>
+      <button class="sidebar-btn view-profile-btn" onclick="window.location.href='/libprofile'"><i class="fas fa-id-card"></i> View Profile</button>
+      <button class="sidebar-btn view-books-btn" onclick="window.location.href='/libbooks'"><i class="fas fa-book-reader"></i> View Books</button>
+      <button class="sidebar-btn book-history-btn" onclick="window.location.href='/libhistory'"><i class="fas fa-history"></i> Book History</button>
+      <button class="sidebar-btn students-btn" onclick="window.location.href='/libstudents'"><i class="fas fa-users"></i> Students</button>
+      <button class="sidebar-btn notice-btn dropdown"><i class="fas fa-bell"></i> Notice</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libsend_notice'"><i class="fas fa-paper-plane"></i> Send Notice</button>
+        <button onclick="window.location.href='/libview_notice'"><i class="fas fa-eye"></i> View Notices</button>
+      </div>
+      <button class="sidebar-btn attendance-btn dropdown"><i class="fas fa-calendar-check"></i> Attendance</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libmark_attendence'"><i class="fas fa-user-check"></i> Mark Attendance</button>
+        <button onclick="window.location.href='/libview_attendance'"><i class="fas fa-eye"></i> View Attendance</button>
+      </div>
+      <button class="sidebar-btn settings-btn dropdown active"><i class="fas fa-cog"></i> Settings</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/fine_settings'"><i class="fas fa-rupee-sign"></i> Fine Settings</button>
+        <button onclick="window.location.href='/subscription_settings'"><i class="fas fa-id-card"></i> Subscription Settings</button>
+        <!--<button onclick="window.location.href='/holiday_settings'"><i class="fas fa-calendar-times"></i> Holiday Settings</button>
+        <button onclick="window.location.href='/theme_settings'"><i class="fas fa-palette"></i> Theme Settings</button> -->
+      </div>
+    </div>
+    <button class="logout-btn" onclick="window.location.href='/'"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+
+  <div class="dashboard" id="dashboard-content">
+    <!-- Issue Book Form -->
+    <div class="home-layout">
+      <h1><i class="fas fa-book"></i> Issue Book</h1>
+      
+      <!-- Filter Options -->
+      <div class="filter-container">
+        <div class="filter-group">
+          <label>Filter by Status</label>
+          <select id="filterStatus">
+            <option value="all">All Requests</option>
+            <option value="pending">Pending Approval</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+            <option value="overdue">Overdue</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Filter by Student</label>
+          <input type="text" id="filterStudent" placeholder="Search by student name or ID">
+        </div>
+        <div class="filter-group">
+          <label>Filter by Book</label>
+          <input type="text" id="filterBook" placeholder="Search by book title or ID">
+        </div>
+      </div>
+      
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="issue-tab">Issue New Book</button>
+        <button class="tab-btn" data-tab="requests-tab" id="managerequest">Manage Requests (<span id="pending-count">0</span>)</button>
+      </div>
+      
+      <!-- Issue New Book Tab -->
+      <div class="tab-content active" id="issue-tab">
+        <form class="add-form" id="issueBookForm">
+          <h2>Issue Book Details</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Book Name/ID</label>
+              <input type="text" id="bookSearch" placeholder="Enter book name or ID" />
+              <div id="bookResults" class="search-results"></div>
+            </div>
+          </div>
+
+          <div id="selectedBookInfo" class="selected-info" style="display: none;">
+            <h4>Selected Book</h4>
+            <div class="info-content">
+              <div><strong>Name:</strong> <span id="selectedBookName"></span></div>
+              <div><strong>Author:</strong> <span id="selectedBookAuthor"></span></div>
+              <div><strong>Available:</strong> <span id="selectedBookAvailable"></span></div>
+              <input type="hidden" id="issueBookId" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Student Name/ID</label>
+              <input type="text" id="studentSearch" placeholder="Enter student name or ID" />
+              <div id="studentResults" class="search-results"></div>
+            </div>
+          </div>
+
+          <div id="selectedStudentInfo" class="selected-info" style="display: none;">
+            <h4>Selected Student</h4>
+            <div class="info-content">
+              <div><strong>Name:</strong> <span id="selectedStudentName"></span></div>
+              <div><strong>Course:</strong> <span id="selectedStudentCourse"></span></div>
+              <input type="hidden" id="issueStudentId" />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Issue Date</label>
+              <input type="date" id="issueDate" required />
+            </div>
+            <div class="form-group">
+              <label>Due Date (14 days)</label>
+              <input type="date" id="dueDate" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Notes (Optional)</label>
+            <textarea id="issueNotes" placeholder="Any special instructions or notes"></textarea>
+          </div>
+
+          <button type="submit" class="add-btn" id="issueBookBtn" disabled>
+            <i class="fas fa-paper-plane"></i> Submit Request
+          </button>
+        </form>
+      </div>
+      
+      <!-- Manage Requests Tab -->
+      <div class="tab-content" id="requests-tab">
+        <div class="data-table-container">
+          <table class="data-table" id="requestsTable">
+            <thead>
+              <tr>
+                <th>Request ID</th>
+                <th>Enrollment NO</th>
+                <th>Student Name</th>
+                <th>Book ID</th>
+                <th>Book Name</th>
+                <th>Publisher</th>
+                <th>Request Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="requestsTableBody">
+              <!-- Requests will be populated here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <div class="form-actions" style="margin-top: 20px;">
+        <button type="button" class="back-btn" onclick="window.location.href='/libhome'">Back to Home</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toast-message">Book issued successfully!</span>
+  </div>
+
+  <!-- Request Details Modal -->
+  <div class="modal" id="requestModal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h2 id="modalTitle">Request Details</h2>
+      <div class="modal-body" id="modalBody">
+        <!-- Details will be populated here -->
+      </div>
+      <div class="modal-actions" id="modalActions">
+        <!-- Action buttons will be populated here -->
+      </div>
+    </div>
+  </div>
+  <!-- Approval Confirmation Modal -->
+<div class="modal" id="approveModal">
+  <div class="modal-content">
+    <span class="close-modal" onclick="closeApproveModal()">&times;</span>
+    <h2>Confirm Approval</h2>
+    <div class="modal-body">
+      <p>Are you sure you want to approve this book request?</p>
+      <div class="form-group">
+        <label>Notes (Optional)</label>
+        <textarea id="approvalNotes" placeholder="Any additional notes for the student"></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeApproveModal()">Cancel</button>
+      <button class="modal-btn approve-btn" id="confirmApproveBtn">Confirm Approval</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rejection Confirmation Modal -->
+<div class="modal" id="rejectModal">
+  <div class="modal-content">
+    <span class="close-modal" onclick="closeRejectModal()">&times;</span>
+    <h2>Confirm Rejection</h2>
+    <div class="modal-body">
+      <p>Are you sure you want to reject this book request?</p>
+      <div class="form-group">
+        <label>Reason (Required)</label>
+        <textarea id="rejectionReason" placeholder="Please specify the reason for rejection" required></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeRejectModal()">Cancel</button>
+      <button class="modal-btn reject-btn" id="confirmRejectBtn">Confirm Rejection</button>
+    </div>
+  </div>
+</div>
+
+  <style>
+    /* Confirmation Modal Styles */
+.modal-content h2 {
+  color: white;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+}
+
+.modal-body p {
+  color: rgba(255,255,255,0.9);
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+.modal-btn {
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  color: white;
+  background: rgba(255,255,255,0.1);
+}
+
+.modal-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.confirm-btn {
+  background: linear-gradient(135deg, #00b09b, #96c93d);
+}
+
+.confirm-btn:hover {
+  background: linear-gradient(135deg, #00a591, #86b935);
+}
+
+.confirm-reject-btn {
+  background: linear-gradient(135deg, #ff512f, #dd2476);
+}
+
+.confirm-reject-btn:hover {
+  background: linear-gradient(135deg, #e8482b, #c82066);
+}
+    .action-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+}
+
+.action-btn {
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.approve-btn {
+  background-color: #28a745; /* green */
+}
+
+.reject-btn {
+  background-color: #dc3545; /* red */
+}
+
+    /* Additional CSS for the new features */
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .tab-btn {
+      padding: 12px 20px;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: rgba(255,255,255,0.7);
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      bottom: -1px;
+    }
+    
+    .tab-btn.active {
+      color: white;
+      border-bottom-color: #2575fc;
+      background: rgba(37, 117, 252, 0.1);
+    }
+    
+    .tab-btn:hover:not(.active) {
+      color: white;
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(5px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .modal-content {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(15px);
+      border-radius: 15px;
+      padding: 30px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,255,255,0.1);
+      animation: modalFadeIn 0.3s ease;
+    }
+    
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .close-modal {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      color: rgba(255,255,255,0.7);
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .close-modal:hover {
+      color: white;
+    }
+    
+    .modal-body {
+      margin: 20px 0;
+    }
+    
+    .modal-body .detail-item {
+      display: flex;
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .modal-body .detail-label {
+      min-width: 120px;
+      font-weight: 500;
+      color: white;
+    }
+    
+    .modal-body .detail-value {
+      color: rgba(255,255,255,0.9);
+    }
+    
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .modal-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .approve-btn {
+      background: linear-gradient(135deg, #00b09b, #96c93d);
+      color: white;
+    }
+    
+    .reject-btn {
+      background: linear-gradient(135deg, #ff512f, #dd2476);
+      color: white;
+    }
+    
+    .status-badge.pending {
+      background: rgba(255, 179, 0, 0.8);
+    }
+    
+    .status-badge.approved {
+      background: rgba(102, 187, 106, 0.8);
+    }
+    
+    .status-badge.rejected {
+      background: rgba(239, 83, 80, 0.8);
+    }
+    
+    .status-badge.overdue {
+      background: rgba(231, 76, 60, 0.8);
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: rgba(255,255,255,0.7);
+    }
+    
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+  </style>
+
+  <script>
+    let books = [];
+    let students = [];
+    let bookRequests =  [];
+    let issuedBooks = JSON.parse(localStorage.getItem('issuedBooks')) || [];
+    
+    // Fetch data from server
+    fetch('/book')
+      .then(response => response.json())
+      .then(data => {
+        books = data.book;
+        console.log(books)
+        lodstud();
+      })
+      .catch(error => {
+        alert("Error loading books");
+        console.log(error);
+      });
+      function lodstud(){
+        fetch('/regstudents')
+        .then(response => response.json())
+        .then(data => {
+          console.log(data)
+          students = data;
+          lodreq();
+      })
+      .catch(error => {
+        alert("Error loading students");
+        console.log(error);
+      });
+      }
+    function lodreq(){
+      fetch('/bookrequests')
+        .then(response => response.json())
+        .then(data => {
+          if(data!='No book requests'){
+            bookRequests = data;
+            console.log(bookRequests);
+            updatePendingCount();
+            renderRequestsTable();
+          }
+          else{
+            bookRequests = [];
+            updatePendingCount();
+            renderRequestsTable();
+          }
+        })
+        
+    }
+    
+    
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set default dates
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById("issueDate").value = today;
+      const due = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      document.getElementById("dueDate").value = due;
+      
+      // Load and render requests
+      updatePendingCount();
+      renderRequestsTable();
+      
+      // Setup tab switching
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+          
+          btn.classList.add('active');
+          document.getElementById(btn.dataset.tab).classList.add('active');
+        });
+      });
+      
+      // Setup filter events
+      document.getElementById('filterStatus').addEventListener('change', renderRequestsTable);
+      document.getElementById('filterStudent').addEventListener('input', renderRequestsTable);
+      document.getElementById('filterBook').addEventListener('input', renderRequestsTable);
+      
+      // Setup dropdown menus
+      const dropdowns = document.querySelectorAll('.sidebar-btn.dropdown'); 
+      dropdowns.forEach(btn => { 
+        btn.addEventListener('click', (e) => {
+          if (e.target.classList.contains('active')) {
+            return;
+          }
+          
+          dropdowns.forEach(b => { 
+            if (b !== btn) b.classList.remove('active'); 
+          }); 
+          btn.classList.toggle('active'); 
+        }); 
+      }); 
+
+      // Close dropdowns when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.sidebar-btn.dropdown')) {
+          dropdowns.forEach(btn => {
+            btn.classList.remove('active');
+          });
+        }
+      });
+    });
+    
+    function saveRequests() {
+      //localStorage.setItem('bookRequests', JSON.stringify(bookRequests));
+      updatePendingCount();
+    }
+    
+    function saveIssuedBooks() {
+      //localStorage.setItem('issuedBooks', JSON.stringify(issuedBooks));
+    }
+    
+    function updatePendingCount() {
+      const pendingCount = bookRequests.length;
+      document.getElementById('pending-count').textContent = pendingCount;
+    }
+    // Book search functionality
+document.getElementById("bookSearch").addEventListener("input", function () {
+  const term = this.value.toLowerCase();
+  const results = document.getElementById("bookResults");
+  results.innerHTML = "";
+  if (term.length < 2) return;
+
+  books.filter(b => b.TITLE.toLowerCase().includes(term) || b.BOOK_ID==term)
+    .slice(0, 5).forEach(book => {
+      const div = document.createElement("div");
+      div.className = "search-result-item";
+      div.innerHTML = `<strong>${book.TITLE}</strong> (ID: ${book.BOOK_ID})<br>${book.AUTHOR}`;
+      div.onclick = () => {
+        document.getElementById("bookSearch").value = book.TITLE;
+        document.getElementById("selectedBookName").textContent = book.TITLE;
+        document.getElementById("selectedBookAuthor").textContent = book.AUTHOR;
+        document.getElementById("selectedBookAvailable").textContent = book.AVAILABLE;
+        document.getElementById("issueBookId").value = book.BOOK_ID;
+        document.getElementById("selectedBookInfo").style.display = "block";
+        results.innerHTML = "";
+        checkIssueButton();
+      };
+      results.appendChild(div);
+    });
+});
+
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      toastMessage.textContent = message;
+      toast.classList.toggle('error', isError);
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+    
+    function checkIssueButton() {
+      const bookId = document.getElementById("issueBookId").value;
+      const studentId = document.getElementById("issueStudentId").value;
+      document.getElementById("issueBookBtn").disabled = !(bookId && studentId);
+    }
+    
+    function openRequestModal(REQUEST_ID) {
+      const request = bookRequests.find(req => req.REQUEST_ID === REQUEST_ID) || 
+                      issuedBooks.find(issue => issue.ISSUE_ID === REQUEST_ID);
+      if (!request) return;
+      
+      const modal = document.getElementById('requestModal');
+      const modalTitle = document.getElementById('modalTitle');
+      const modalBody = document.getElementById('modalBody');
+      const modalActions = document.getElementById('modalActions');
+      
+      // Set modal title based on status
+      if (request.status === 'pending') {
+        modalTitle.textContent = `Request #${request.REQUEST_ID}`;
+      } else if (request.status === 'approved') {
+        modalTitle.textContent = `Issued Book #${request.ISSUE_ID || request.REQUEST_ID}`;
+      } else {
+        modalTitle.textContent = `Request #${request.requestId}`;
+      }
+      
+      // Populate modal body
+      modalBody.innerHTML = `
+        <div class="detail-item">
+          <div class="detail-label">Student:</div>
+          <div class="detail-value">${request.STUDENT_NAME} (ID: ${request.STUDENT_ID})</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Book:</div>
+          <div class="detail-value">${request.TITLE} (ID: ${request.BOOK_ID})</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Request Date:</div>
+          <div class="detail-value">${request.REQUEST_DATE}</div>
+        </div>
+        
+        <div class="detail-item">
+          <div class="detail-label">Status:</div>
+          <div class="detail-value">
+            <span class="status-badge ${request.STATUS}">${request.STATUS.charAt(0).toUpperCase() + request.STATUS.slice(1)}</span>
+          </div>
+        </div>
+        ${request.notes ? `
+        <div class="detail-item">
+          <div class="detail-label">Notes:</div>
+          <div class="detail-value">${request.notes}</div>
+        </div>` : ''}
+        ${request.ACTION_DATE ? `
+        <div class="detail-item">
+          <div class="detail-label">Approved Date:</div>
+          <div class="detail-value">${request.approvedDate}</div>
+        </div>` : ''}
+      `;
+      
+      // Set modal actions based on status
+      modalActions.innerHTML = '';
+      if (request.status === 'pending') {
+        modalActions.innerHTML = `
+          <button class="modal-btn reject-btn" onclick="rejectRequest('${request.requestId}')">
+            <i class="fas fa-times"></i> Reject
+          </button>
+          <button class="modal-btn approve-btn" onclick="approveRequest('${request.requestId}')">
+            <i class="fas fa-check"></i> Approve
+          </button>
+        `;
+      } else if (request.status === 'approved') {
+        if (new Date(request.dueDate) < new Date()) {
+          modalActions.innerHTML = `
+            <button class="modal-btn" onclick="sendOverdueNotice('${request.issueId}')" style="background: linear-gradient(135deg, #ff512f, #dd2476); color: white;">
+              <i class="fas fa-bell"></i> Send Overdue Notice
+            </button>
+          `;
+        }
+      }
+      
+      modal.style.display = 'flex';
+    }
+    
+    function closeModal() {
+      document.getElementById('requestModal').style.display = 'none';
+    }
+    
+    function approveRequest(requestId) {
+      const request = bookRequests.find(req => req.requestId === requestId);
+      if (!request) return;
+      
+      // Update request status
+      request.status = 'approved';
+      request.approvedDate = new Date().toISOString().split('T')[0];
+      
+      // Create issued book record
+      const issueId = 'I' + Date.now().toString().slice(-6);
+      issuedBooks.push({
+        issueId,
+        bookId: request.bookId,
+        bookTitle: request.bookTitle,
+        studentId: request.studentId,
+        studentName: request.studentName,
+        issueDate: request.requestDate,
+        dueDate: request.dueDate,
+        returnDate: '',
+        fine: 0,
+        status: 'issued'
+      });
+      
+      saveRequests();
+      saveIssuedBooks();
+      renderRequestsTable();
+      closeModal();
+      showToast('Request approved and book issued successfully!');
+      
+      // Send approval notice
+      sendNotice(request.studentId, 'Book Request Approved', 
+        `Your request for "${request.bookTitle}" has been approved. Please collect the book by ${request.dueDate}.`);
+    }
+    
+    function rejectRequest(requestId) {
+      const reason = prompt('Enter rejection reason:');
+      if (!reason) return;
+      
+      const request = bookRequests.find(req => req.requestId === requestId);
+      if (!request) return;
+      
+      request.status = 'rejected';
+      request.rejectedDate = new Date().toISOString().split('T')[0];
+      request.rejectionReason = reason;
+      
+      saveRequests();
+      renderRequestsTable();
+      closeModal();
+      showToast('Request rejected successfully!');
+      
+      // Send rejection notice
+      sendNotice(request.studentId, 'Book Request Rejected', 
+        `Your request for "${request.bookTitle}" has been rejected. Reason: ${reason}`);
+    }
+    
+    function sendNotice(studentId, title, message) {
+      // In a real app, this would send to the server
+      console.log('Notice sent:', { studentId, title, message });
+    }
+    
+    function sendOverdueNotice(issueId) {
+      const issue = issuedBooks.find(i => i.issueId === issueId);
+      if (!issue) return;
+      
+      sendNotice(issue.studentId, 'Overdue Book Notice', 
+        `The book "${issue.bookTitle}" is overdue. Please return it immediately to avoid additional fines.`);
+      
+      showToast('Overdue notice sent to student!');
+      closeModal();
+    }
+    
+    function renderRequestsTable() {
+      const tableBody = document.getElementById('requestsTableBody');
+      const statusFilter = document.getElementById('filterStatus').value;
+      const studentFilter = document.getElementById('filterStudent').value.toLowerCase();
+      const bookFilter = document.getElementById('filterBook').value.toLowerCase();
+      
+      // Combine requests and issued books for display
+      let allRecords = [...bookRequests];
+      issuedBooks.forEach(issue => {
+        allRecords.push({
+          ...issue,
+          requestId: issue.issueId,
+          requestDate: issue.issueDate
+        });
+      });
+      
+      // Filter records
+      let filteredRecords = allRecords.filter(record => {
+        // Status filter
+        if (statusFilter !== 'all') {
+          if (statusFilter === 'overdue') {
+            if (record.status !== 'approved' && record.STATUS !== 'issued') return false;
+          } else if (record.status !== statusFilter) {
+            return false;
+          }
+        }
+        
+        // Student filter
+        if (studentFilter && 
+            !record.studentName.toLowerCase().includes(studentFilter) && 
+            !record.studentId.toLowerCase().includes(studentFilter)) {
+          return false;
+        }
+        
+        // Book filter
+        if (bookFilter && 
+            !record.bookTitle.toLowerCase().includes(bookFilter) && 
+            !record.bookId.toLowerCase().includes(bookFilter)) {
+          return false;
+        }
+        
+        return true;
+      });
+      
+      // Sort by date (newest first)
+      filteredRecords.sort((a, b) => new Date(b.REQUEST_DATE) - new Date(a.REQUEST_DATE));
+      
+      // Render table rows
+      tableBody.innerHTML = '';
+      
+      if (filteredRecords.length === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="7" class="empty-state">
+              <i class="fas fa-inbox"></i>
+              <p>No requests found matching your criteria</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      
+      bookRequests.forEach(record => {
+        const row = document.createElement('tr');
+        
+        // Check if overdue
+        const isOverdue = (record.STATUS === 'approved' || record.STATUS === 'issued');
+        
+        row.innerHTML = `
+          <td>${record.REQUEST_ID || '-'}</td>
+          <td>${record.STUDENT_ID || '-'}</td>
+          <td>${record.STUDENT_NAME || '-'}</td>
+          <td>${record.BOOK_ID}</td>
+          <td>${record.TITLE}</td>
+          <td>${record.PUBLISHER}</td>
+          <td>${record.REQUEST_DATE}</td>
+          <td>${record.STATUS}</td>
+          <td>
+           <div class="action-buttons">
+            <button class="action-btn approve-btn" onclick="showApproveModal(${record.REQUEST_ID})""> Approve</button>
+            <button class="action-btn reject-btn" onclick="showRejectModal(${record.REQUEST_ID})"> Reject</button>
+          </div>
+          </td>
+        `;
+        
+        tableBody.appendChild(row); 
+      });
+    }
+    function rej(id){
+      fetch('/reject_request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ requestId: id })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === 'success') {
+          showToast("Request rejected successfully!");
+          // Reset form
+          document.getElementById("issueBookForm").reset();
+          document.getElementById("selectedBookInfo").style.display = "none";
+          document.getElementById("selectedStudentInfo").style.display = "none";
+          document.getElementById("issueBookBtn").disabled = true;
+          // Switch to requests tab
+          document.querySelector('.tab-btn[data-tab="requests-tab"]').click();
+        } else {
+          showToast("Error: " + res.error, true);
+        }
+      })
+      .catch(err => {
+        showToast("Server error while rejecting request", true);
+        console.error(err);
+      });
+    }
+    function Approve(rid){
+      const request = bookRequests.find(req => req.REQUEST_ID === rid);
+      if (!request) {
+        showToast("Request not found", true);
+        return;
+      }
+      fetch('/approve_request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ requestId: rid })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === 'success') {
+          showToast("Request approved and book issued successfully!");
+          // Reset form
+          document.getElementById("issueBookForm").reset();
+          document.getElementById("selectedBookInfo").style.display = "none";
+          document.getElementById("selectedStudentInfo").style.display = "none";
+          document.getElementById("issueBookBtn").disabled = true;
+          // Switch to requests tab
+          document.querySelector('.tab-btn[data-tab="requests-tab"]').click();
+        } else {
+          showToast("Error: " + res.error, true);
+        }
+      })
+      saveRequests();
+      saveIssuedBooks();
+      renderRequestsTable();
+      closeModal();
+      showToast('Request approved and book issued successfully!');
+    }
+
+    // Student search functionality
+    document.getElementById("studentSearch").addEventListener("input", function () {
+      const term = this.value.toLowerCase();
+      const results = document.getElementById("studentResults");
+      results.innerHTML = "";
+      if (term.length < 2) return;
+
+      students.filter(s => s.NAME.toLowerCase().includes(term) || s.STUDENT_ID==term || s.COURSE.toLowerCase().includes(term))
+
+        .slice(0, 5).forEach(student => {
+          const div = document.createElement("div");
+          div.className = "search-result-item";
+          div.innerHTML = `<strong>${student.NAME}</strong> (ID: ${student.STUDENT_ID})<br>${student.COURSE} }`;
+          div.onclick = () => {
+            document.getElementById("studentSearch").value = student.NAME;
+            document.getElementById("selectedStudentName").textContent = student.NAME;
+            document.getElementById("selectedStudentCourse").textContent = student.COURSE;
+            document.getElementById("issueStudentId").value = student.STUDENT_ID;
+            document.getElementById("selectedStudentInfo").style.display = "block";
+            results.innerHTML = "";
+            checkIssueButton();
+          };
+          results.appendChild(div);
+        });
+    });
+
+    // Form submission for new request
+    document.getElementById("issueBookForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const bookId = document.getElementById("issueBookId").value;
+      const studentId = document.getElementById("issueStudentId").value;
+      const issueDate = document.getElementById("issueDate").value;
+      const dueDate = document.getElementById("dueDate").value;
+      const notes = document.getElementById("issueNotes").value;
+      /*const book = books.find(b => b.BOOK_ID === bookId);
+      const student = students.find(s => s.id === studentId);
+      */
+      /*if (!book || !student) {
+        showToast("Error: Book or student not found", true);
+        return;
+      }*/
+      if (issueDate > dueDate) {
+        showToast("Error: Issue date cannot be after due date", true);
+        return;
+      }
+      const requestId = 'R' + Date.now().toString().slice(-6);
+      fetch('/issue_book', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    bookId: bookId,
+    studentId: studentId,
+    issueDate: issueDate,
+    dueDate: dueDate,
+    notes: notes
+  })
+})
+.then(res => res.json())
+.then(res => {
+  if (res.status === 'success') {
+    showToast("Book request submitted for approval!");
+    // Reset form
+    document.getElementById("issueBookForm").reset();
+    document.getElementById("selectedBookInfo").style.display = "none";
+    document.getElementById("selectedStudentInfo").style.display = "none";
+    document.getElementById("issueBookBtn").disabled = true;
+    window.location.reload();
+    document.querySelector('.tab-btn[data-tab="requests-tab"]').click();
+  } else {
+    showToast("Error: " + res.error, true);
+  }
+})
+.catch(err => {
+  showToast("Server error while submitting request", true);
+  console.error(err);
+});
+  saveRequests();
+  showToast("Book request submitted for approval!");      // Reset form
+  this.reset();
+  document.getElementById("selectedBookInfo").style.display = "none";
+  document.getElementById("selectedStudentInfo").style.display = "none";
+  document.getElementById("issueBookBtn").disabled = true;
+  document.querySelector('.tab-btn[data-tab="requests-tab"]').click();
+});
+document.querySelector('.close-modal').addEventListener('click', closeModal);
+window.addEventListener('click', (e) => {
+  if (e.target === document.getElementById('requestModal')) {
+      closeModal();
+    }
+});
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+let currentRequestId = null;
+
+function showApproveModal(requestId) {
+  currentRequestId = requestId;
+  document.getElementById('approveModal').style.display = 'flex';
+  document.getElementById('approvalNotes').value = '';
+}
+
+function closeApproveModal() {
+  document.getElementById('approveModal').style.display = 'none';
+}
+
+function showRejectModal(requestId) {
+  currentRequestId = requestId;
+  document.getElementById('rejectModal').style.display = 'flex';
+  document.getElementById('rejectionReason').value = '';
+}
+
+function closeRejectModal() {
+  document.getElementById('rejectModal').style.display = 'none';
+}
+
+// Setup event listeners for the confirmation buttons
+document.getElementById('confirmApproveBtn').addEventListener('click', function() {
+  const notes = document.getElementById('approvalNotes').value;
+  if (currentRequestId) {
+    Approve(currentRequestId, notes);
+    closeApproveModal();
+  }
+});
+
+document.getElementById('confirmRejectBtn').addEventListener('click', function() {
+  const reason = document.getElementById('rejectionReason').value;
+  if (!reason) {
+    showToast('Please enter a rejection reason', true);
+    return;
+  }
+  if (currentRequestId) {
+    rej(currentRequestId, reason);
+    closeRejectModal();
+  }
+});
+
+// Modify your existing functions to use these modals
+function rej(id, reason = '') {
+  fetch('/reject_request', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ 
+      requestId: id,
+      reason: reason 
+    })
+  })
+  .then(res => res.json())
+  .then(res => {
+    if (res.status === 'success') {
+      showToast("Request rejected successfully!");
+      lodreq();
+    } else {
+      showToast("Error: " + res.error, true);
+    }
+  })
+  .catch(err => {
+    showToast("Server error while rejecting request", true);
+    console.error(err);
+  });
+}
+
+function Approve(rid, notes = '') {
+  fetch('/approve_request', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ 
+      requestId: rid,
+      notes: notes 
+    })
+  })
+  .then(res => res.json())
+  .then(res => {
+    if (res.status === 'success') {
+      showToast("Request approved and book issued successfully!");
+      lodreq();
+    } else {
+      showToast("Error: " + res.error, true);
+    }
+  })
+  .catch(err => {
+    showToast("Server error while approving request", true);
+    console.error(err);
+  });
+}
+
+// Update your action buttons in renderRequestsTable to use the modals
+// Change the onclick handlers from:
+// onclick="Approve(${record.REQUEST_ID})" and onclick="rej(${record.REQUEST_ID})"
+// to:
+// onclick="showApproveModal(${record.REQUEST_ID})" and onclick="showRejectModal(${record.REQUEST_ID})"
+  </script>
+</body>
+</html>

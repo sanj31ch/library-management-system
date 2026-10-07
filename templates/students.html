@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - Library Management</title>
+    <!-- Font Awesome for icons -->
+    
+    <link rel="stylesheet" href="{{url_for('static',filename='styless.css')}}">
+    <style>
+        select {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        option {
+            background-color: #333;
+            color: white;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #4fc3f7;
+        }
+        .error-message {
+            color: #ff6b6b;
+            text-align: center;
+            padding: 20px;
+        }
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <div class="blur-bg"></div>
+    
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-book-open"></i> GP LIBRARY
+        </div>
+        <button class="sidebar-btn" id="profileBtn">
+            <i class="fas fa-user-graduate"></i> <span>View Profile</span>
+        </button>
+        <button class="sidebar-btn" id="attendanceBtn">
+            <i class="fas fa-calendar-alt"></i> <span>Borrowing History</span>
+        </button>
+        <button class="sidebar-btn" id="booksBtn">
+            <i class="fas fa-book"></i> <span>View Books</span>
+        </button>
+        <button class="sidebar-btn" id="issueBookBtn">
+            <i class="fas fa-hand-holding-heart"></i> <span>Issue Book</span>
+        </button>
+        <button class="sidebar-btn" id="notificationsBtn">
+            <i class="fas fa-bell"></i> <span>Notifications</span>
+            <span class="notification-badge" id="notificationBadge">0</span>
+        </button>
+        <button class="sidebar-btn " id="logoutBtn" onclick="window.location.href='/studsubscription'">
+            <i class="fas fa-sign-out-alt"></i> <span>Subscription</span>
+        </button>
+        <button class="sidebar-btn " id="payfineBtn" onclick="window.location.href='/studfine'">
+            <i class="fas fa-sign-out-alt"></i> <span>fine</span>
+        </button>
+        <button class="sidebar-btn logout-btn" id="logoutBtn" onclick="window.location.href='/'">
+            <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+        </button>
+        
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard View -->
+        <div class="view-container" id="dashboardView">
+            <div class="welcome-box">
+                <h1>Welcome Back, <span id="studentName">Student!</span></h1>
+                <p>Manage your library activities, track borrowed books, and stay updated with notifications.</p>
+            </div>
+            
+            <div class="dashboard-cards">
+                <div class="dashboard-card">
+                    <i class="fas fa-book"></i>
+                    <h3>Books Issued</h3>
+                    <p id="issuedBooksCount">0</p>
+                </div>
+                <div class="dashboard-card">
+                    <i class="fas fa-bell"></i>
+                    <h3>Unread Notifications</h3>
+                    <p id="unreadNotificationsCount">0</p>
+                </div>
+                <div class="dashboard-card">
+                    <i class="fas fa-history"></i>
+                    <h3>Pending Requests</h3>
+                    <p id="pendingRequestsCount">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile View -->
+        <div class="view-container profile-view" id="profileView">
+            <h1>Student Profile</h1>
+            <div class="profile-info">
+                <div class="profile-field">
+                    <label>Name:</label>
+                    <span id="profileName">Loading...</span>
+                </div>
+                <div class="profile-field">
+                    <label>Student ID:</label>
+                    <span id="profileStudentId">Loading...</span>
+                </div>
+                <div class="profile-field">
+                    <label>Course:</label>
+                    <span id="profileCourse">Loading...</span>
+                </div>
+                <div class="profile-field">
+                    <label>Semester:</label>
+                    <span id="profileSemester">Loading...</span>
+                </div>
+                <div class="profile-field">
+                    <label>Email:</label>
+                    <span id="profileEmail">Loading...</span>
+                </div>
+                <div class="profile-field">
+                    <label>Phone:</label>
+                    <span id="profilePhone">Loading...</span>
+                </div>
+                <div class="profile-field">
+                    <label>Books Issued:</label>
+                    <span id="profileBooksIssued">0 (View Details)</span>
+                </div>
+            </div>
+            <button class="back-btn" id="backBtn">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </button>
+        </div>
+
+        <!-- Borrowing History View -->
+        <div class="view-container attendance-view" id="attendanceView">
+            <h1>Book Borrowing History</h1>
+            
+            <div class="filter-controls">
+                <div class="filter-group">
+                    <label for="monthFilter">Month:</label>
+                    <select id="monthFilter">
+                        <option value="all">All Months</option>
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11">November</option>
+                        <option value="12">December</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="yearFilter">Year:</label>
+                    <select id="yearFilter">
+                        <option value="all">All Years</option>
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="statusFilter">Status:</label>
+                    <select id="statusFilter">
+                        <option value="all">All Status</option>
+                        <option value="Issued">Issued</option>
+                        <option value="Returned">Returned</option>
+                        <option value="Overdue">Overdue</option>
+                    </select>
+                </div>
+                
+                <button class="filter-btn" id="applyAttendanceFilter">
+                    <i class="fas fa-filter"></i> Apply
+                </button>
+            </div>
+            
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Issue Date</th>
+                            <th>Book Title</th>
+                            <th>Book ID</th>
+                            <th>Return Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceData">
+                        <tr>
+                            <td colspan="5" class="loading">Loading borrowing history...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <button class="back-btn" id="backFromAttendance">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </button>
+        </div>
+
+        <!-- Books View -->
+        <div class="view-container books-view" id="booksView">
+            <h1>Library Books</h1>
+            
+            <div class="filter-controls">
+                <div class="filter-group">
+                    <label for="bookStatusFilter">Status:</label>
+                    <select id="bookStatusFilter">
+                        <option value="all">All Books</option>
+                        <option value="Available">Available</option>
+                        <option value="Issued">Issued</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="bookCategoryFilter">Category:</label>
+                    <select id="bookCategoryFilter">
+                        <option value="all">All Categories</option>
+                        <option value="Computer">Computer Science</option>
+                        <option value="Mathematics">Mathematics</option>
+                        <option value="Physics">Physics</option>
+                        <option value="Literature">Literature</option>
+                        <option value="History">History</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="bookSearch">Search:</label>
+                    <input type="text" id="bookSearch" placeholder="Book name or author">
+                </div>
+                
+                <button class="filter-btn" id="applyBookFilter">
+                    <i class="fas fa-filter"></i> Apply
+                </button>
+            </div>
+            
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Sr.No</th>
+                            <th>Book ID</th>
+                            <th>Book Title</th>
+                            <th>ISBN</th>
+                            <th>Author</th>
+                            <th>PUBLISHER</th>
+                            <th>LANGUAGE</th>
+                            <th>PAGES</th>
+                            <th>YEAR</th>
+                            <th>AVAILABLE</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="booksData">
+                        <tr>
+                            <td colspan="7" class="loading">Loading books...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <button class="back-btn" id="backFromBooks">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </button>
+        </div>
+
+        <!-- Issue Book View -->
+        <div class="view-container issue-book-view" id="issueBookView">
+            <h1>Book Issuing</h1>
+            
+            <div class="issue-options">
+                <button class="issue-option-btn" id="requestIssueBtn">
+                    <i class="fas fa-plus-circle"></i> Request Issue Book
+                </button>
+                <button class="issue-option-btn" id="viewIssuedBooksBtn">
+                    <i class="fas fa-list-ul"></i> View Issued Books
+                </button>
+            </div>
+            
+            <!-- Request Issue Book Form -->
+            <div class="request-issue-form" id="requestIssueForm" style="display: none;">
+                <div class="form-group">
+                    <label for="bookSelect">Select Book:</label>
+                    <select id="bookSelect">
+                        <option value="">-- Select a book --</option>
+                        <!-- Options will be loaded dynamically -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="purpose">Purpose:</label>
+                    <textarea id="purpose" rows="3" placeholder="Briefly describe why you need this book"></textarea>
+                </div>
+                
+                <button class="send-request-btn" id="sendRequestBtn">
+                    <i class="fas fa-paper-plane"></i> Send Request to Librarian
+                </button>
+            </div>
+            
+            <!-- View Issued Books Section -->
+            <div class="view-issued-books" id="viewIssuedBooks" style="display: none;">
+                <div class="filter-controls">
+                    <div class="filter-group">
+                        <label for="issuedStatusFilter">Status:</label>
+                        <select id="issuedStatusFilter">
+                            <option value="all">All Status</option>
+                            <option value="Issued">Issued</option>
+                            <option value="Returned">Returned</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Overdue">Overdue</option>
+                        </select>
+                    </div>
+                    
+                    <button class="filter-btn" id="applyIssuedFilter">
+                        <i class="fas fa-filter"></i> Apply
+                    </button>
+                </div>
+                
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Sr.No</th>
+                                <th>STUDENT ID</th>
+                                <th>BOOK ID</th>
+                                <th>BOOK TITLE</th>
+                                <th>PUBLISHER </th>
+                                <th>REQUEST DATE</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="issuedBooksData">
+                            <tr>
+                                <td colspan="6" class="loading">Loading issued books...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <button class="back-btn" id="backFromIssueBook">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </button>
+        </div>
+        
+        <!-- Notifications View -->
+        <div class="view-container notifications-view" id="notificationsView">
+            <h1>Notifications</h1>
+            
+            <button class="mark-all-read" id="markAllRead">
+                <i class="fas fa-check-circle"></i> Mark All as Read
+            </button>
+            
+            <div class="notifications-list" id="notificationsList">
+                <div class="loading">Loading notifications...</div>
+            </div>
+            
+            <button class="back-btn" id="backFromNotifications">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </button>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirmationModal" style="display: none;">
+        <div class="modal-content">
+            <h3 id="modalTitle">Confirm Action</h3>
+            <p id="modalMessage">Are you sure you want to perform this action?</p>
+            <div class="modal-buttons">
+                <button class="modal-btn confirm-btn" id="modalConfirm">Confirm</button>
+                <button class="modal-btn cancel-btn" id="modalCancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        
+    
+const sidebarBtns = {
+    profile: document.getElementById('profileBtn'),
+    attendance: document.getElementById('attendanceBtn'),
+    books: document.getElementById('booksBtn'),
+    issueBook: document.getElementById('issueBookBtn'),
+    notifications: document.getElementById('notificationsBtn'),
+    logout: document.getElementById('logoutBtn')
+};
+
+const views = {
+    dashboard: document.getElementById('dashboardView'),
+    profile: document.getElementById('profileView'),
+    attendance: document.getElementById('attendanceView'),
+    books: document.getElementById('booksView'),
+    issueBook: document.getElementById('issueBookView'),
+    notifications: document.getElementById('notificationsView')
+};
+
+const backBtns = {
+    profile: document.getElementById('backBtn'),
+    attendance: document.getElementById('backFromAttendance'),
+    books: document.getElementById('backFromBooks'),
+    issueBook: document.getElementById('backFromIssueBook'),
+    notifications: document.getElementById('backFromNotifications')
+};
+
+const issueOptions = {
+    requestIssueBtn: document.getElementById('requestIssueBtn'),
+    viewIssuedBooksBtn: document.getElementById('viewIssuedBooksBtn'),
+    requestIssueForm: document.getElementById('requestIssueForm'),
+    viewIssuedBooks: document.getElementById('viewIssuedBooks')
+};
+
+const notificationBadge = document.getElementById('notificationBadge');
+
+// Initialize the dashboard
+function initDashboard() {
+    // Show dashboard by default
+    showView('dashboard');
+    
+    // Load student profile data
+    loadStudentProfile();
+    
+    // Set up event listeners
+    setupEventListeners();
+}
+
+// Set up all event listeners
+function setupEventListeners() {
+    // Sidebar button clicks
+    sidebarBtns.profile.addEventListener('click', () => showView('profile'));
+    sidebarBtns.attendance.addEventListener('click', () => {
+        showView('attendance');
+        loadAttendanceData();
+    });
+    sidebarBtns.books.addEventListener('click', () => {
+        showView('books');
+        loadBooksData();
+    });
+    sidebarBtns.issueBook.addEventListener('click', () => {
+        showView('issueBook');
+        loadIssuedBooksData();
+    });
+    sidebarBtns.notifications.addEventListener('click', () => {
+        showView('notifications');
+        loadNotifications();
+    });
+    //sidebarBtns.logout.addEventListener('click', showLogoutModal);
+    
+    // Back button clicks
+    backBtns.profile.addEventListener('click', () => showView('dashboard'));
+    backBtns.attendance.addEventListener('click', () => showView('dashboard'));
+    backBtns.books.addEventListener('click', () => showView('dashboard'));
+    backBtns.issueBook.addEventListener('click', () => showView('dashboard'));
+    backBtns.notifications.addEventListener('click', () => showView('dashboard'));
+    
+    // Issue book options
+    issueOptions.requestIssueBtn.addEventListener('click', showRequestIssueForm);
+    issueOptions.viewIssuedBooksBtn.addEventListener('click', showViewIssuedBooks);
+    
+    // Filter buttons
+    document.getElementById('applyAttendanceFilter').addEventListener('click', applyAttendanceFilter);
+    document.getElementById('applyBookFilter').addEventListener('click', applyBookFilter);
+    document.getElementById('applyIssuedFilter').addEventListener('click', applyIssuedFilter);
+    
+    // Send request button
+    document.getElementById('sendRequestBtn').addEventListener('click', sendIssueRequest);
+    
+    // Mark all as read button
+    document.getElementById('markAllRead').addEventListener('click', markAllNotificationsAsRead);
+}
+
+// Show the selected view and hide others
+function showView(viewName) {
+    // Hide all views
+    Object.values(views).forEach(view => {
+        view.style.display = 'none';
+    });
+    
+    // Show the selected view
+    views[viewName].style.display = 'block';
+    
+    // Reset issue book view options
+    if (viewName === 'issueBook') {
+        issueOptions.requestIssueForm.style.display = 'none';
+        issueOptions.viewIssuedBooks.style.display = 'none';
+    }
+}
+
+// Show request issue form
+function showRequestIssueForm() {
+    issueOptions.requestIssueForm.style.display = 'block';
+    issueOptions.viewIssuedBooks.style.display = 'none';
+}
+
+// Show view issued books section
+function showViewIssuedBooks() {
+    issueOptions.requestIssueForm.style.display = 'none';
+    issueOptions.viewIssuedBooks.style.display = 'block';
+}
+
+// Load student profile data
+function loadStudentProfile() {
+    fetch('/studentdashboard')
+        .then(response => response.json())
+        .then(data => {
+            if (data.student) {
+            console.log(data.student);
+                // Update the profile view
+                document.getElementById('profileName').textContent = data.student.NAME;
+                document.getElementById('profileStudentId').textContent = data.student.STUDENT_ID;
+                document.getElementById('profileCourse').textContent = data.student.COURSE;
+                document.getElementById('profileSemester').textContent = data.student.SEMESTER;
+                document.getElementById('profileEmail').textContent = data.student.EMAIL;
+                document.getElementById('profilePhone').textContent = data.student.MOBILE_NO;
+                document.getElementById('profileBooksIssued').textContent = `${data.issued_books} (View Details)`;
+                
+                // Update welcome message
+                document.getElementById('studentName').textContent = data.student.NAME;
+                
+                // Update notification badge
+                notificationBadge.textContent = data.unread_notifications;
+                notificationBadge.style.display = data.unread_notifications > 0 ? 'flex' : 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching student profile:', error);
+        });
+}
+
+// Load attendance data from API
+function loadAttendanceData(filterParams = {}) {
+    fetch('/student_books')
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.getElementById('attendanceData');
+            tableBody.innerHTML = '';
+            
+            
+                data.books.forEach((record, index) => {
+                    const row = document.createElement('tr');
+                    
+                    // Determine status
+                    let status = 'issued';
+                    if (record.ACTUAL_RETURN_DATE) status = 'returned';
+                    else if (new Date(record.RETURN_DATE) < new Date()) status = 'overdue';
+                    
+                    row.innerHTML = `
+                        <td>${formatDate(record.ISSUE_DATE)}</td>
+                        <td>${record.TITLE}</td>
+                        <td>${record.BOOK_ID}</td>
+                        <td>${formatDate(record.RETURN_DATE)}</td>
+                        <td class="status-${status}">${capitalizeFirstLetter(status)}</td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+           
+        })
+        .catch(error => {
+            console.error('Error fetching attendance data:', error);
+            document.getElementById('attendanceData').innerHTML = '<tr><td colspan="5">Error loading data</td></tr>';
+        });
+}
+
+// Apply attendance filter
+function applyAttendanceFilter() {
+    const monthFilter = document.getElementById('monthFilter').value;
+    const yearFilter = document.getElementById('yearFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+    
+    loadAttendanceData({
+        month: monthFilter,
+        year: yearFilter,
+        status: statusFilter
+    });
+}
+
+// Load books data from API
+function loadBooksData(filterParams = {}) {
+    fetch('/book')
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.getElementById('booksData');
+            tableBody.innerHTML = '';
+            console.log(data);
+            //console.log(data.books.length);
+            //if (data.books && data.books> 0) {
+                data.book.forEach((book, index) => {
+                    const row = document.createElement('tr');
+                    console.log(book.BLANGUAGE)
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${book.BOOK_ID}</td>
+                        <td>${book.TITLE}</td>
+                        <td>${book.ISBN}</td>
+                        <td>${book.AUTHOR}</td>
+                        <td>${book.PUBLISHER}</td>
+                        <td>${book.BLANGUAGE}</td>
+                        <td>${book.PAGES}</td>
+                        <td>${book.YEAR}</td>
+                        <td>${book.AVAILABLE}/${book.OUT_OF}</td>
+                        <td class="status-${book.STATUS.toLowerCase()}">${capitalizeFirstLetter(book.STATUS)}</td>
+                        <td>${book.STATUS==='AVAILABLE'?
+                            `<button class="filter-btn"  onclick="sendIssueRequest(${book.BOOK_ID})")'">Issue</button>` :
+                            `<span class="not-available">-</span>`}
+                        </td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+            //} else {
+                //tableBody.innerHTML = '<tr><td colspan="7">No books found</td></tr>';
+            //}
+        })
+        .catch(error => {
+            console.error('Error fetching books data:', error);
+            document.getElementById('booksData').innerHTML = '<tr><td colspan="7">Error loading data</td></tr>';
+        });
+}
+
+// Apply book filter
+function applyBookFilter() {
+    const statusFilter = document.getElementById('bookStatusFilter').value;
+    const categoryFilter = document.getElementById('bookCategoryFilter').value;
+    const searchQuery = document.getElementById('bookSearch').value.toLowerCase();
+    
+    loadBooksData({
+        status: statusFilter,
+        category: categoryFilter,
+        search: searchQuery
+    });
+}
+
+// Load issued books data from API
+function loadIssuedBooksData(filterParams = {}) {
+    fetch('/student_books')
+        .then(response => response.json())
+        .then(data => {
+            const tableBody = document.getElementById('issuedBooksData');
+            tableBody.innerHTML = '';
+            
+            
+                data.books.forEach((book, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${book.STUDENT_ID}</td>
+                        <td>${book.BOOK_ID}</td>
+                        <td>${book.TITLE}</td>
+                        <td>${book.PUBLISHER}</td>
+                        <td>${formatDate(book.REQUEST_DATE)}</td>
+                        <td class="status-${status}">${book.STATUS}</td>
+                    `;
+                    tableBody.appendChild(row);
+                    
+                });
+            
+        })
+        .catch(error => {
+            console.error('Error fetching issued books data:', error);
+            document.getElementById('issuedBooksData').innerHTML = '<tr><td colspan="6">Error loading data</td></tr>';
+        });
+}
+
+// Apply issued books filter
+function applyIssuedFilter() {
+    const statusFilter = document.getElementById('issuedStatusFilter').value;
+    loadIssuedBooksData({ status: statusFilter });
+}
+
+// Load notifications from API
+function loadNotifications() {
+    fetch('/student_notifications')
+        .then(response => response.json())
+        .then(data => {
+            const notificationsList = document.getElementById('notificationsList');
+            notificationsList.innerHTML = '';
+            
+            if (data.notifications && data.notifications.length > 0) {
+                data.notifications.forEach(notification => {
+                    const notificationItem = document.createElement('div');
+                    notificationItem.className =` notification-item ${notification.READ_STATUS ? '' : 'unread'}`;
+                    
+                    const notificationTime = new Date(`${notification.DATE}T${notification.TIME}`);
+                    const timeString = formatTime(notificationTime);
+                    
+                    notificationItem.innerHTML = `
+                        <div class="notification-title">
+                            <span>${notification.TITLE}</span>
+                            <span class="notification-time">${timeString}</span>
+                        </div>
+                        <div class="notification-message">${notification.MESSAGE}</div>
+                    `;
+                    
+                    if (!notification.READ_STATUS) {
+                        notificationItem.addEventListener('click', () => {
+                            markNotificationAsRead(notification.NOTIFICATION_ID, notificationItem);
+                        });
+                    }
+                    
+                    notificationsList.appendChild(notificationItem);
+                });
+            } else {
+                notificationsList.innerHTML = '<div class="no-notifications">No notifications found</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching notifications:', error);
+            document.getElementById('notificationsList').innerHTML = '<div class="error-message">Error loading notifications</div>';
+        });
+}
+
+// Mark a single notification as read
+function markNotificationAsRead(notificationId, notificationElement) {
+    fetch('/mark_notification_read', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ notification_id: notificationId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            notificationElement.classList.remove('unread');
+            updateNotificationBadge();
+        }
+    })
+    .catch(error => {
+        console.error('Error marking notification as read:', error);
+    });
+}
+
+// Mark all notifications as read
+function markAllNotificationsAsRead() {
+    fetch('/mark_all_notifications_read', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            loadNotifications();
+            updateNotificationBadge();
+        }
+    })
+    .catch(error => {
+        console.error('Error marking all notifications as read:', error);
+    });
+}
+
+// Update notification badge count
+function updateNotificationBadge() {
+    fetch('/studentdashboard')
+        .then(response => response.json())
+        .then(data => {
+            if (data.unread_notifications !== undefined) {
+                notificationBadge.textContent = data.unread_notifications;
+                notificationBadge.style.display = data.unread_notifications > 0 ? 'flex' : 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching notification count:', error);
+        });
+}
+
+
+
+
+// Send issue request
+function sendIssueRequest(bookId) {
+    
+    fetch('/request_book', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            book_id: bookId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Book issue request sent to librarian for approval');
+            //document.getElementById('requestIssueForm').reset();
+            issueOptions.requestIssueForm.style.display = 'none';
+        } else {
+            alert(data.error || 'Failed to send request');
+        }
+    })
+    .catch(error => {
+        console.error('Error sending request:', error);
+        alert('Error sending request');
+    });
+}
+
+// Helper function to format date
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+}
+
+// Helper function to format time
+function formatTime(date) {
+    if (!date) return '';
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// Helper function to capitalize first letter
+function capitalizeFirstLetter(string) {
+    if (!string) return '';
+    return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+}
+
+// Initialize the dashboard when the page loads
+window.addEventListener('DOMContentLoaded', initDashboard());
+    </script>
+
+</body>
+</html>

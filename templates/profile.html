@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>View Profile</title>
+  <link rel="stylesheet" href="{{url_for('static',filename='styles.css')}}">
+</head>
+<body>
+  <div class="dashboard">
+    <div class="sidebar">
+      <h2>Admin</h2>
+      <button class="sidebar-btn active" onclick="nav()">View Profile</button>
+      <button class="sidebar-btn" onclick="nav2()">Manage Librarian</button>
+      <button class="sidebar-btn" onclick="nav4()">Book Inventory</button>
+      <button class="sidebar-btn" onclick="nav5()">Send Notice</button>
+      <button class="sidebar-btn logout-btn"  onclick="window.location.href='/'">Logout </button>
+    </div>
+    <div class="content">
+      <div class="content-panel active">
+        <div class="profile-header">
+          <h3>View Profile</h3>
+          <button class="action-btn edit-profile-btn" onclick="toggleEditMode()">Edit Profile</button>
+        </div>
+        
+        <div id="view-mode">
+          <div class="profile-info">
+            <p><strong>Full Name:</strong> <span id="view-name">{{name}}</span></p>
+            <p><strong>Gender:</strong> <span id="view-gender">{{gender}}</span></p>
+            <p><strong>Mobile:</strong> <span id="view-mobile">{{mobile}}</span></p>
+            <p><strong>Qualification:</strong> <span id="view-qualification">{{qualify}}</span></p>
+            <p><strong>Address:</strong> <span id="view-address">{{address}}</span></p>
+          </div>
+        </div>
+        
+        <div id="edit-mode" style="display: none;">
+          <form id="profileForm">
+            <div class="form-group">
+              <label for="edit-name">Full Name:</label>
+              <input type="text" id="edit-name" value="{{name}}" required>
+            </div>
+            <div class="form-group">
+              <label for="edit-mobile">Mobile:</label>
+              <input type="tel" id="edit-mobile" value="{{mobile}}" required>
+            </div>
+            <div class="form-group">
+              <label for="edit-qualification">Qualification:</label>
+              <input type="text" id="edit-qualification" value="{{qualify}}" required>
+            </div>
+            <div class="form-group">
+              <label for="edit-address">Address:</label>
+              <textarea id="edit-address" rows="3" required>{{address}}</textarea>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="action-btn cancel" onclick="toggleEditMode()">Cancel</button>
+              <button type="submit" class="action-btn">Save Changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function nav() {
+      window.location.href = "/profile";
+    }
+    function nav2() {
+      window.location.href = "/manage";
+    }
+    function nav4() {
+      window.location.href = "/inventory";
+    }
+    function nav5() {
+      window.location.href = "/notice";
+    }
+
+    function toggleEditMode() {
+      const viewMode = document.getElementById('view-mode');
+      const editMode = document.getElementById('edit-mode');
+      
+      
+      if (viewMode.style.display === 'none') {
+        // Switching back to view mode
+        viewMode.style.display = 'block';
+        editMode.style.display = 'none';
+        document.querySelector('.edit-profile-btn').textContent = 'Edit Profile';
+      } else {
+        // Switching to edit mode
+        viewMode.style.display = 'none';
+        editMode.style.display = 'block';
+        document.querySelector('.edit-profile-btn').textContent = 'View Profile';
+      }
+    }
+
+    // Handle form submission
+    document.getElementById('profileForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Update view with edited values
+      document.getElementById('view-name').textContent = document.getElementById('edit-name').value;
+      document.getElementById('view-mobile').textContent = document.getElementById('edit-mobile').value;
+      document.getElementById('view-qualification').textContent = document.getElementById('edit-qualification').value;
+      document.getElementById('view-address').textContent = document.getElementById('edit-address').value;
+      let uname=document.getElementById('edit-name').value;
+      let umobile=document.getElementById('edit-mobile').value;
+      let ucourse=document.getElementById('edit-qualification').value;
+      let uaddress=document.getElementById('edit-address').value;
+
+      fetch('/update',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({Role:"ADMINP",name:uname,mobile:umobile,course:ucourse,address:uaddress})
+      })
+      .then(response=>response.json())
+      .then(data=>{
+        let stat=data;
+        if(stat=='Updated'){
+          alert('Profile updated successfully!');
+          toggleEditMode();
+        }
+        if (stat=='Failed') {
+          alert('Profile update Failed');
+        }
+      }) 
+    });
+  </script>
+</body>
+</html>

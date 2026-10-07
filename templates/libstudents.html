@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Management - GP Library</title>
+  <link rel="stylesheet" href="{{url_for('static',filename='styles2.css')}}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+     select {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        option {
+            background-color: #333;
+            color: white;
+        }
+    #editForm {
+      background: #ffffff22;
+      padding: 20px;
+      margin-top: 20px;
+      display: none;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+    }
+    #editForm input, #editForm select {
+      width: 100%;
+  padding: 12px 15px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  color: white;
+    }
+    #editForm label {
+      font-weight: bold;
+      color: white;
+      margin-bottom: 30%;
+    }
+  </style>
+</head>
+<body>
+  <div class="blur-bg"></div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-title"><i class="fas fa-book-open"></i> GP Library</div>
+      <button class="sidebar-btn home-btn" onclick="window.location.href='/libhome'"><i class="fas fa-home"></i> Home</button>
+      <button class="sidebar-btn view-profile-btn" onclick="window.location.href='/libprofile'"><i class="fas fa-id-card"></i> View Profile</button>
+      <button class="sidebar-btn view-books-btn" onclick="window.location.href='/libbooks'"><i class="fas fa-book-reader"></i> View Books</button>
+      <button class="sidebar-btn book-history-btn" onclick="window.location.href='/libhistory'"><i class="fas fa-history"></i> Book History</button>
+      <button class="sidebar-btn students-btn" onclick="window.location.href='/libstudents'"><i class="fas fa-users"></i> Students</button>
+      <button class="sidebar-btn notice-btn dropdown"><i class="fas fa-bell"></i> Notice</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libsend_notice'"><i class="fas fa-paper-plane"></i> Send Notice</button>
+        <button onclick="window.location.href='/libview_notice'"><i class="fas fa-eye"></i> View Notices</button>
+      </div>
+      <button class="sidebar-btn attendance-btn dropdown"><i class="fas fa-calendar-check"></i> Attendance</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libmark_attendence'"><i class="fas fa-user-check"></i> Mark Attendance</button>
+        <button onclick="window.location.href='/libview_attendance'"><i class="fas fa-eye"></i> View Attendance</button>
+      </div>
+      <button class="sidebar-btn settings-btn dropdown active"><i class="fas fa-cog"></i> Settings</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/fine_settings'"><i class="fas fa-rupee-sign"></i> Fine Settings</button>
+        <button onclick="window.location.href='/subscription_settings'"><i class="fas fa-id-card"></i> Subscription Settings</button>
+        <!--<button onclick="window.location.href='/holiday_settings'"><i class="fas fa-calendar-times"></i> Holiday Settings</button>
+        <button onclick="window.location.href='/theme_settings'"><i class="fas fa-palette"></i> Theme Settings</button> -->
+      </div>
+    </div>
+    <button class="logout-btn" onclick="window.location.href='/'"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+
+  <!-- Dashboard -->
+  <div class="dashboard" id="dashboard-content">
+    <div class="home-layout">
+      <h1><i class="fas fa-users"></i> Registered Students</h1>
+
+      <!-- Filters -->
+      <div class="form-row">
+        <div class="form-group">
+          <label style="color:white;">Filter by Year</label>
+          <select id="filterYear" class="search-input">
+            <option value="">All Years</option>
+            <option value="First">First Year</option>
+            <option value="Second">Second Year</option>
+            <option value="Third">Third Year</option>
+            <option value="Final">Final Year</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label style="color:white;">Filter by Semester</label>
+          <select id="filterSemester" class="search-input">
+            <option value="">All Semesters</option>
+            <option value="1">Semester 1</option>
+            <option value="2">Semester 2</option>
+            <option value="3">Semester 3</option>
+            <option value="4">Semester 4</option>
+            <option value="5">Semester 5</option>
+            <option value="6">Semester 6</option>
+            <option value="7">Semester 7</option>
+            <option value="8">Semester 8</option>
+          </select>
+        </div>
+      </div>
+
+      <input type="text" id="studentSearchInput" class="search-input" placeholder="Search by name, ID or course..."/>
+
+      <button onclick="generateReport()" class="action-btn" style="margin: 10px 0;">
+        <i class="fas fa-file-word"></i> Generate Report
+      </button>
+
+      <div class="data-table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Gender</th>
+              <th>Course</th>
+              <th>Username</th>
+              <th>Password</th>
+              <th>Semester</th>
+              <th>Mobile</th>
+              <th>ISSUED</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="studentTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Edit Form -->
+      <form id="editForm" onsubmit="saveEditedStudent(event)">
+        <h3 style="color:white;">Edit Student Details</h3>
+        <br><br>
+        <input type="hidden" id="editIndex" />
+        <label>Name:</label><br><br>
+        <input type="text" id="editName" required/><br><br>
+        <label>Course:</label><br><br>
+        <input type="text" id="editCourse" required/><br><br>
+        <label>Email:</label><br><br>
+        <input type="text" id="editEmail" required/><br><br>
+        <label>Semester:</label><br><br>
+        <select id="editSemester" required>
+          <option value="1">1</option><option value="2">2</option>
+          <option value="3">3</option><option value="4">4</option>
+          <option value="5">5</option><option value="6">6</option>
+        </select><br><br>
+        <label>Mobile:</label><br><br>
+        <input type="text" id="editMobile" required/><br><br>
+        <label>Username:</label><br><br>
+        <input type="text" id="editUser" required/><br><br>
+        <label>Password:</label><br><br>
+        <input type="text" id="editPass" required/><br><br>
+        <button type="submit" class="action-btn"><i class="fas fa-save"></i> Save Changes</button>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toast-message">Action successful</span>
+  </div>
+
+  <script>
+    let students =  [];
+    let ind;
+    fetch('/regstudents')
+    .then(response=>response.json())
+    .then(data=>{
+        students=data;
+        renderStudents()
+    })
+    .catch(error=>{
+      alert("Error")
+      console.log(error)
+    })
+    function renderStudents() {
+      const tbody = document.getElementById("studentTableBody");
+      tbody.innerHTML = "";
+      students.forEach((student, index) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${student.STUDENT_ID}</td>
+          <td>${student.NAME}</td>
+          <td>${student.GENDER}</td>
+          <td>${student.COURSE}</td>
+          <td>${student.USERNAME}</td>
+          <td>${student.PASSWORD}</td>
+          <td>${student.SEMESTER}</td>
+          <td>${student.MOBILE_NO}</td>
+          <td>${student.BOOKS_ISSUED}</td>
+          <td>
+            <button class="action-btn" onclick="showEditForm(${index})">
+              <i class="fas fa-edit"></i> Edit
+            </button>
+            <button class="delete-btn" onclick="deleteStudent(${index},${student.STUDENT_ID})">
+              <i class="fas fa-trash"></i> Delete
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+      filterStudents();
+    }
+
+    function deleteStudent(index,sid) {
+      if (!confirm("Are you sure you want to delete this student?")) return;
+      fetch(`/libdel/${sid}`,{
+        method:'DELETE'
+      })
+      .then(response=>response.json())
+      .then(data=>{
+        alert(data);
+        const removed = students.splice(index, 1);
+        renderStudents();
+        showToast(`${removed[0].name} removed successfully!`);
+      })
+      .catch(error=>{console.log(error);alert("error");})
+    }
+
+    function showEditForm(index) {
+      const s = students[index];
+      ind=index;
+      document.getElementById("editIndex").value = index;
+      document.getElementById("editName").value = s.NAME;
+      document.getElementById("editCourse").value = s.COURSE;
+      document.getElementById("editEmail").value = s.EMAIL;
+      document.getElementById("editSemester").value = s.SEMESTER;
+      document.getElementById("editMobile").value = s.MOBILE_NO;
+      document.getElementById("editUser").value = s.USERNAME;
+      document.getElementById("editPass").value = s.PASSWORD;
+      document.getElementById("editForm").style.display = "block";
+      window.scrollTo(0, document.body.scrollHeight);
+      
+    }
+
+    function saveEditedStudent(e) {
+      e.preventDefault();
+      const index = document.getElementById("editIndex").value;
+      students[index] = {
+        ...students[index],
+        name: document.getElementById("editName").value,
+        course: document.getElementById("editCourse").value,
+        email: document.getElementById("editEmail").value,
+        semester: document.getElementById("editSemester").value,
+        mobile: document.getElementById("editMobile").value,
+        username:document.getElementById("editUser").value,
+        password:document.getElementById("editPass").value
+      };
+
+      const s = students[index];
+      
+      console.log(s);
+      fetch('/update',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({Role:"LSTUDENT",id:s.STUDENT_ID,sname:s.name,ssemester:s.semester,sphone:s.mobile,suser:s.username,spass:s.password,semail:s.email,scourse:s.course})
+      })
+      .then(response=>response.json())
+      .then(data=>{
+        alert(data);
+        return fetch('regstudents')
+        .then(response=>response.json())
+        .then(data=>{
+          students=data;
+          renderStudents();
+        })
+       
+      })
+      .catch(error=>{alert("Error");console.log(error);})
+      document.getElementById("editForm").style.display = "none";
+      renderStudents();
+      showToast("Student updated successfully!");
+    }
+
+    function generateReport() {
+      const rows = document.querySelectorAll("#studentTableBody tr");
+      if (rows.length === 0) {
+        alert("No students to include in the report.");
+        return;
+      }
+
+      let reportContent = "GP Library - Student Report\n\n";
+      reportContent += "ID\tLibrary ID\tName\tCourse\tYear\tSemester\tMobile\n";
+      reportContent += "-----------------------------------------------------------------------\n";
+
+      rows.forEach(row => {
+        if (row.style.display !== "none") {
+          const cells = Array.from(row.children).map(td => td.textContent.trim());
+          reportContent += cells.slice(0, 7).join("\t") + "\n";
+        }
+      });
+
+      const blob = new Blob([reportContent], { type: "application/msword" });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "Student_Report.doc";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      document.getElementById("toast-message").textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3000);
+    }
+
+    function filterStudents() {
+      const search = document.getElementById("studentSearchInput").value.toLowerCase();
+      const selectedYear = document.getElementById("filterYear").value.toLowerCase();
+      const selectedSemester = document.getElementById("filterSemester").value;
+
+      document.querySelectorAll("#studentTableBody tr").forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const year = row.children[4].textContent.toLowerCase();
+        const semester = row.children[5].textContent;
+        const matchesSearch = text.includes(search);
+        const matchesYear = !selectedYear || year.includes(selectedYear);
+        const matchesSemester = !selectedSemester || semester === selectedSemester;
+        row.style.display = (matchesSearch && matchesYear && matchesSemester) ? "" : "none";
+      });
+    }
+
+    document.getElementById("studentSearchInput").addEventListener("input", filterStudents);
+    document.getElementById("filterYear").addEventListener("change", filterStudents);
+    document.getElementById("filterSemester").addEventListener("change", filterStudents);
+
+    renderStudents();
+    const dropdowns = document.querySelectorAll('.sidebar-btn.dropdown'); 
+    dropdowns.forEach(btn => { 
+      btn.addEventListener('click', (e) => {
+        // Don't toggle if clicking on a dropdown button that's already active
+        if (e.target.classList.contains('active')) {
+          return;
+        }
+        
+        dropdowns.forEach(b => { 
+          if (b !== btn) b.classList.remove('active'); 
+        }); 
+        btn.classList.toggle('active'); 
+      }); 
+    }); 
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.sidebar-btn.dropdown')) {
+        dropdowns.forEach(btn => {
+          btn.classList.remove('active');
+        });
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Book History - GP Library</title>
+  <link rel="stylesheet" href="{{url_for('static',filename='styles2.css')}}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    .report-buttons {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    select { background-color: rgba(255, 255, 255, 0.1); color: white; }
+    option { background-color: #333; color: white; }
+  </style>
+</head>
+<body>
+  <div class="blur-bg"></div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-title"><i class="fas fa-book-open"></i> GP Library</div>
+      <button class="sidebar-btn home-btn" onclick="window.location.href='/libhome'"><i class="fas fa-home"></i> Home</button>
+      <button class="sidebar-btn view-profile-btn" onclick="window.location.href='/libprofile'"><i class="fas fa-id-card"></i> View Profile</button>
+      <button class="sidebar-btn view-books-btn" onclick="window.location.href='/libbooks'"><i class="fas fa-book-reader"></i> View Books</button>
+      <button class="sidebar-btn book-history-btn" onclick="window.location.href='/libhistory'"><i class="fas fa-history"></i> Book History</button>
+      <button class="sidebar-btn students-btn" onclick="window.location.href='/libstudents'"><i class="fas fa-users"></i> Students</button>
+      <button class="sidebar-btn notice-btn dropdown"><i class="fas fa-bell"></i> Notice</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libsend_notice'"><i class="fas fa-paper-plane"></i> Send Notice</button>
+        <button onclick="window.location.href='/libview_notice'"><i class="fas fa-eye"></i> View Notices</button>
+      </div>
+      <button class="sidebar-btn attendance-btn dropdown"><i class="fas fa-calendar-check"></i> Attendance</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libmark_attendence'"><i class="fas fa-user-check"></i> Mark Attendance</button>
+        <button onclick="window.location.href='/libview_attendance'"><i class="fas fa-eye"></i> View Attendance</button>
+      </div>
+      <button class="sidebar-btn settings-btn dropdown active"><i class="fas fa-cog"></i> Settings</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/fine_settings'"><i class="fas fa-rupee-sign"></i> Fine Settings</button>
+        <button onclick="window.location.href='/subscription_settings'"><i class="fas fa-id-card"></i> Subscription Settings</button>
+        <!--<button onclick="window.location.href='/holiday_settings'"><i class="fas fa-calendar-times"></i> Holiday Settings</button>
+        <button onclick="window.location.href='/theme_settings'"><i class="fas fa-palette"></i> Theme Settings</button> -->
+      </div>
+    </div>
+    <button class="logout-btn" onclick="window.location.href='/'"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+
+
+  <!-- Main Content -->
+  <div class="dashboard" id="dashboard-content">
+    <div class="home-layout" id="historySection">
+      <h1><i class="fas fa-history"></i> Book History</h1>
+
+      <div class="filter-container">
+        <div class="filter-group">
+          <label>Filter by Status:</label>
+          <select id="historyStatusFilter">
+            <option value="all">All</option>
+            <option value="issued">Issued</option>
+            <option value="returned">Returned</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Filter by Date Range:</label>
+          <input type="date" id="historyStartDate" />
+          <span style="color: white; margin: 0 10px;">to</span>
+          <input type="date" id="historyEndDate" />
+        </div>
+        <div class="filter-group">
+          <label>Search:</label>
+          <input type="text" id="historySearch" placeholder="Search by book, student or ID..." />
+        </div>
+      </div>
+
+      <div class="report-buttons">
+        <button class="add-btn" onclick="generateReport()">Generate Report</button>
+        <button class="add-btn" onclick="generatePDF()">Generate PDF</button>
+      </div>
+
+      <div class="data-table-container">
+        <table class="data-table" id="historyTable">
+          <thead>
+            <tr>
+              <th>Issue ID</th>
+              <th>Book</th>
+              <th>Student</th>
+              <th>Issue Date</th>
+              <th>Due Date</th>
+              <th>Return Date</th>
+              <th>Days Overdue</th>
+              <th>Fine (₹)</th>
+              <th>Status</th>
+              <th>Reason</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="form-actions">
+        <button class="back-btn" onclick="window.location.href='/'">Back to Home</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let books=[]
+    fetch('/libhistorydata')
+    .then(response => response.json())
+    .then(data => {
+      books = data||[];
+      renderTable();
+    })
+    .catch(error =>{ console.error('Error fetching book history data:', error);alert('Error')});
+
+    function renderTable() {
+      const tbody = document.getElementById("historyTableBody");
+      tbody.innerHTML = "";
+      if(books.length>0){
+      books.forEach((book,index) => {
+        tbody.innerHTML += `
+          <tr  data-status="${book.STATUS.toLowerCase()}" data-issue-date="${book.ISSUE_DATE}" data-return-date="${book.RETURN_DATE || ''}">
+            <td>${book.ISSUE_ID}</td>
+            <td>${book.BOOK}</td>
+            <td>${book.STUDENT}</td>
+            <td>${book.ISSUE_DATE}</td>
+            <td>${book.DUE_DATE}</td>
+            <td>${book.RETURN_DATE}</td>
+            <td>${book.DAYS_OVERDUE==''?book.DAYS_OVERDUE:'-'}</td>
+            <td>${book.FINE}</td>
+            <td><span class="status-badge ${status}"><button class="status-badge" style="background-color:green;" disable>${book.STATUS}</button></span></td>
+            <td>${book.REASON||` - `}</td>
+          </tr>`;
+      });
+    }
+    else{
+      tbody.innerHTML = `<tr colspan=9><td>No book history</td></tr>`;
+    }
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const status = document.getElementById("historyStatusFilter").value;
+      const start = document.getElementById("historyStartDate").value;
+      const end = document.getElementById("historyEndDate").value;
+      const search = document.getElementById("historySearch").value.toLowerCase();
+      document.querySelectorAll("#historyTableBody tr").forEach(row => {
+        const s = row.dataset.status;
+        const iDate = row.dataset.issueDate;
+        const rDate = row.dataset.returnDate;
+        const text = row.textContent.toLowerCase();
+        const matchStatus = status === "all" || s === status;
+        const matchDate = (!start || iDate >= start || rDate >= start) && (!end || iDate <= end || rDate <= end);
+        const matchSearch = text.includes(search);
+        row.style.display = matchStatus && matchDate && matchSearch ? "" : "none";
+      });
+    }
+
+    function generateReport() {
+  const table = document.getElementById("historyTable").cloneNode(true);
+  const filteredRows = [...table.querySelectorAll("tbody tr")].filter(row => row.style.display !== "none");
+
+  // Keep only visible rows
+  table.querySelector("tbody").innerHTML = '';
+  filteredRows.forEach(row => table.querySelector("tbody").appendChild(row));
+
+  // Create HTML with heading
+  const win = window.open('', '', 'width=900,height=600');
+  win.document.write(`
+    <html>
+    <head>
+      <title>Book History Report</title>
+      <style>
+        body { font-family: Arial; padding: 20px; }
+        h2 { text-align: center; margin-bottom: 20px; }
+        table {
+          width: 100%; border-collapse: collapse; margin-top: 10px;
+        }
+        th, td {
+          border: 1px solid #999; padding: 8px; text-align: left;
+        }
+        th { background-color: #f2f2f2; }
+      </style>
+    </head>
+    <body>
+      <h2>📚 Book History Report</h2>
+      ${table.outerHTML}
+    </body>
+    </html>
+  `);
+  win.document.close();
+  win.print();
+}
+
+   function generatePDF() {
+  const table = document.getElementById("historyTable").cloneNode(true);
+  const filteredRows = [...table.querySelectorAll("tbody tr")].filter(row => row.style.display !== "none");
+
+  // Remove all hidden rows
+  table.querySelector("tbody").innerHTML = '';
+  filteredRows.forEach(row => table.querySelector("tbody").appendChild(row));
+
+  // Create a wrapper with title + table
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = `
+    <h2 style="text-align: center; margin-bottom: 20px;">📚 Book History Report</h2>
+  `;
+  wrapper.appendChild(table);
+
+  // Apply PDF options
+  html2pdf().from(wrapper).set({
+    margin: 0.5,
+    filename: 'book-history-report.pdf',
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
+  }).save();
+}
+
+    document.querySelectorAll('#historyStatusFilter, #historyStartDate, #historyEndDate').forEach(el => el.addEventListener('change', applyFilters));
+    document.getElementById('historySearch').addEventListener('input', applyFilters);
+
+    renderTable();
+    const dropdowns = document.querySelectorAll('.sidebar-btn.dropdown'); 
+    dropdowns.forEach(btn => { 
+      btn.addEventListener('click', (e) => {
+        // Don't toggle if clicking on a dropdown button that's already active
+        if (e.target.classList.contains('active')) {
+          return;
+        }
+        
+        dropdowns.forEach(b => { 
+          if (b !== btn) b.classList.remove('active'); 
+        }); 
+        btn.classList.toggle('active'); 
+      }); 
+    }); 
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.sidebar-btn.dropdown')) {
+        dropdowns.forEach(btn => {
+          btn.classList.remove('active');
+        });
+      }
+    });
+  </script>
+</body>
+</html>

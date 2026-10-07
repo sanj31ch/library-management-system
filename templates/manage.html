@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manage Librarian</title>
+  <link rel="stylesheet" href="{{url_for('static',filename='styles.css')}}">
+</head>
+<body>
+  <div class="dashboard">
+    <div class="sidebar">
+      <h2>Admin</h2>
+      <button class="sidebar-btn" onclick="nav()">View Profile</button>
+      <button class="sidebar-btn" onclick="nav2()">Manage Librarian</button>
+      <button class="sidebar-btn" onclick="nav4()">Book Inventory</button>
+      <button class="sidebar-btn " onclick="nav5()">Send Notice</button>
+      <button class="sidebar-btn logout-btn"  onclick="window.location.href='/'">Logout </button>
+    </div>
+    <div class="content">
+      <div class="content-panel active">
+        <h3>Manage Librarian</h3>
+        <form>
+          <div class="filter-section">
+            <input type="text" id="libName" placeholder="Name" required>
+            <input type="email" id="libEmail" placeholder="Email" required>
+            <select id="libGender" required>
+              <option value="">Gender</option>
+              <option>Male</option>
+              <option>Female</option>
+              <option>Other</option>
+            </select>
+            <input type="text" id="libMobile" placeholder="Mobile" required pattern="[0-9]{10}">
+            <input type="text" id="libQual" placeholder="Qualification" required>
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <input type="password" id="confirmpassword" placeholder="Confirm Password" required>
+            <button type="submit" onclick="addlib()" >Add Librarian</button>
+            <h5 id="comp" style="color: red;"></h5>
+          </div>
+        </form>
+
+        <div class="filter-section">
+          <input type="text" id="removeID" placeholder="Enter Librarian ID to Remove">
+          <button onclick="removeLibrarian()">Remove Librarian</button>
+        </div>
+
+        <table id="librarian" class="table-container">
+            
+          
+          <thead>
+            <tr>
+              <th>Sr No</th>
+              <th>Librarian ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Gender</th>
+              <th>Mobile</th>
+              <th>Qualification</th>
+            </tr>
+          </thead>
+          <tbody>
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <script >
+    function nav() {
+      window.location.href = "/profile";
+    }
+    function nav2() {
+      window.location.href = "/manage";
+    }
+    function nav4() {
+      window.location.href = "/inventory";
+    }
+    function nav5() {
+      window.location.href = "/notice";
+    }
+    fetch('/lib')
+    .then(response=>response.json())
+    .then(data=>{
+      const tbody=document.querySelector('#librarian tbody');
+      let sr=1;
+      data.librarian.forEach((librarian,index) => {
+        const row=document.createElement('tr');
+        row.innerHTML=`
+        <td>${sr}</td>
+        <td>${librarian.LIBRARIAN_ID}</td>
+        <td>${librarian.NAME}</td>
+        <td>${librarian.EMAIL}</td>
+        <td>${librarian.GENDER}</td>
+        <td>${librarian.MOBILE_NO}</td>
+        <td>${librarian.QUALIFICATION}</td>
+        `;
+        tbody.appendChild(row);
+        sr=sr+1
+      });
+    })
+
+    function addlib(){
+      let lname=document.getElementById('libName').value;
+      let lemail=document.getElementById('libEmail').value;
+      let lgender=document.getElementById('libGender').value;
+      let lmobile=document.getElementById('libMobile').value;
+      let lqual=document.getElementById('libQual').value;
+      let lusername=document.getElementById('username').value;
+      let lpassword=document.getElementById('password').value;
+      let lcon=document.getElementById('confirmpassword').value;
+      if (lname=='' || lemail=='' || lgender=='' || lmobile=='' || lqual=='' || lusername=='' || lpassword=='' || lcon=='') {
+        document.getElementById('comp').innerText='All fields are mandatory';
+        return
+      }
+      if (lpassword!=lcon) {
+        document.getElementById('comp').innerText='Password does not match';
+        return
+      }
+      fetch('/addlib',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({name:lname,email:lemail,gender:lgender,mobile:lmobile,qual:lqual,username:lusername,password:lpassword})
+      })
+      .then(response=>response.json())
+      .then(data=>{
+        let stat=data;
+        if (stat=='Failed') {
+          alert('Failed')
+        }
+      })
+    }
+    function removeLibrarian(){
+      let rlid=document.getElementById('removeID').value;
+      console.log(rlid);
+      fetch('/remlib',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({lid:rlid})
+      })
+    .then(response=>response.json())
+    .then(data=>{
+        let stat2=data;
+        window.location.reload();
+        if (stat2=='Failed') {
+          alert('Failed')
+        }
+      })
+    }
+  </script>
+</body>
+</html>

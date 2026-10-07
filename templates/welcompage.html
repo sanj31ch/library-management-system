@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Library Management System</title>
+  <style>
+    * {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #003399; /* Deep Blue */
+      color: white;
+    }
+
+    .container {
+      width: 600px;
+      margin: 50px auto;
+      background-color: #003399;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 32px;
+      margin-top: 10px;
+    }
+
+    h2 {
+      font-size: 28px;
+      margin: 10px 0;
+    }
+
+    .progress {
+      width: 80%;
+      margin: 20px auto;
+      background-color: white;
+      height: 25px;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0;
+      background-color: orange;
+      text-align: right;
+      padding-right: 10px;
+      line-height: 25px;
+      color: black;
+      font-weight: bold;
+    }
+
+    .login-box {
+      background-color: white;
+      color: black;
+      padding: 20px;
+      margin-top: 30px;
+      border-radius: 10px;
+      display: none;
+    }
+
+    .login-box h3 {
+      color: #0066cc;
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      text-align: left;
+    }
+
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      background-color: #0066cc;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background-color: #004c99;
+    }
+
+    .footer {
+      margin-top: 20px;
+      color: gray;
+    }
+
+    .link {
+      color: #0066cc;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container" id="welcomePage">
+    <h1>Welcome</h1>
+    <h2>TO</h2>
+    <h1>Central Library</h1>
+    <p id="status">Loading...</p>
+    <div class="progress">
+      <div class="progress-bar" id="progressBar">0%</div>
+    </div>
+    <p>Please Wait</p>
+    <h2>Library Management System</h2>
+    <p style="margin-top: 20px;">v 5.2.0.1</p>
+  </div>
+
+  <div class="container login-box" id="loginPage">
+    <h3>Librarian Login Panel</h3>
+    <label for="username">Username:</label>
+    <input type="text" id="username" />
+    
+    <label for="password">Password:</label>
+    <input type="password" id="password" />
+    
+    <button onclick="login()">Login</button>
+    <button onclick="signup()">SignUp</button>
+
+    <p class="link" onclick="alert('Password recovery not implemented')">Retrieve Password?</p>
+    <div class="footer">Library Management System</div>
+  </div>
+
+  <script>
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += 1;
+      document.getElementById("progressBar").style.width = progress + "%";
+      document.getElementById("progressBar").innerText = progress + "%";
+
+      if (progress === 30) {
+        document.getElementById("status").innerText = "Connecting to Database...";
+      }
+
+      if (progress >= 100) {
+        clearInterval(interval);
+        document.getElementById("welcomePage").style.display = "none";
+        document.getElementById("loginPage").style.display = "block";
+      }
+    }, 30);
+
+    function login() {
+      const user = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value.trim();
+
+      if (user === "admin" && pass === "admin") {
+        alert("✅ Login Successful");
+        // Redirect to dashboard or another page here
+      } else {
+        alert("❌ Invalid Username or Password");
+      }
+    }
+
+    function signup() {
+      alert("📌 SignUp Clicked!");
+    }
+  </script>
+</body>
+</html>

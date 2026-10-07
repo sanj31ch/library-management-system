@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Holiday Settings - GP Library</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{{url_for('static',filename='style.css')}}">
+  <style>
+    /* Same select styles as libhome.html */
+    select {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+    option {
+      background-color: #333;
+      color: white;
+    }
+    
+    /* Main Dashboard Layout - Same as libhome.html */
+    .dashboard-container {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+    
+    /* Welcome Card - Same as libhome.html */
+    .welcome-card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(15px);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: white;
+    }
+    
+    .welcome-card h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .welcome-card p {
+      color: rgba(255,255,255,0.8);
+      font-size: 1.1rem;
+      margin-bottom: 0;
+    }
+    
+    /* Stats Card - Same as libhome.html */
+    .stats-card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(15px);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: white;
+    }
+    
+    .stats-card h2 {
+      font-size: 1.8rem;
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      color: white;
+    }
+    
+    /* Holiday-specific styles - Modified to match libhome theme */
+    .settings-group {
+      margin-bottom: 30px;
+    }
+    
+    .settings-group h3 {
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .holiday-list {
+      margin-top: 20px;
+    }
+    
+    .holiday-item {
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .holiday-date {
+      font-weight: bold;
+    }
+    
+    .holiday-name {
+      color: rgba(255,255,255,0.8);
+    }
+    
+    .holiday-actions {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .delete-btn {
+      background: rgba(239, 83, 80, 0.8);
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .delete-btn:hover {
+      background: rgba(239, 83, 80, 1);
+    }
+    
+    .form-row {
+      display: flex;
+      gap: 20px;
+    }
+    
+    .form-row .form-group {
+      flex: 1;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: white;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 10px 15px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      color: white;
+      font-size: 1rem;
+    }
+    
+    .form-group input:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+    
+    .add-btn {
+      background: linear-gradient(135deg, #43cea2, #185a9d);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+    }
+    
+    .add-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
+    
+    /* Sidebar styles - Same as libhome.html */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 250px;
+      background: rgba(206, 179, 179, 0.605);
+      backdrop-filter: blur(15px);
+      padding: 20px 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      z-index: 100;
+      transition: all 0.3s ease;
+    }
+    
+    .sidebar-title {
+      color: white;
+      font-size: 1.5rem;
+      font-weight: bold;
+      padding: 0 20px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .sidebar-btn {
+      width: 100%;
+      padding: 12px 20px;
+      text-align: left;
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .sidebar-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .sidebar-btn i {
+      width: 20px;
+    }
+    
+    .logout-btn {
+      margin-top: auto;
+      padding: 12px 20px;
+      text-align: left;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .logout-btn:hover {
+      background: rgba(255, 0, 0, 0.2);
+    }
+    
+    .dropdown-content {
+      display: none;
+      background: rgba(0, 0, 0, 0.5);
+      padding-left: 20px;
+    }
+    
+    .dropdown-content button {
+      width: 100%;
+      padding: 10px 20px;
+      text-align: left;
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+    
+    .dropdown-content button:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .dropdown.active + .dropdown-content {
+      display: block;
+    }
+    
+    /* Dashboard styles - Same as libhome.html */
+    .dashboard {
+      margin-left: 250px;
+      padding: 30px;
+      min-height: 100vh;
+      transition: all 0.3s ease;
+    }
+    
+    /* Toast notification - Same as libhome.html */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+    
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .toast.error {
+      background: rgba(239, 83, 80, 0.9);
+    }
+    
+    /* Blur background - Same as libhome.html */
+    .blur-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+      z-index: -1;
+    }
+    
+    /* Settings Button Styles - Same as libhome.html */
+    .settings-btn { 
+      background: linear-gradient(135deg, #8e2de2, #4a00e0); 
+    }
+    
+    /* Active button style */
+    .dropdown-content button.active {
+      background: rgba(255, 255, 255, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="blur-bg"></div>
+
+  <!-- Same sidebar as libhome.html -->
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-title"><i class="fas fa-book-open"></i> GP Library</div>
+      <button class="sidebar-btn home-btn" onclick="window.location.href='/libhome'"><i class="fas fa-home"></i> Home</button>
+      <button class="sidebar-btn view-profile-btn" onclick="window.location.href='/libprofile'"><i class="fas fa-id-card"></i> View Profile</button>
+      <button class="sidebar-btn view-books-btn" onclick="window.location.href='/libbooks'"><i class="fas fa-book-reader"></i> View Books</button>
+      <button class="sidebar-btn book-history-btn" onclick="window.location.href='/libhistory'"><i class="fas fa-history"></i> Book History</button>
+      <button class="sidebar-btn students-btn" onclick="window.location.href='/libstudents'"><i class="fas fa-users"></i> Students</button>
+      <button class="sidebar-btn notice-btn dropdown"><i class="fas fa-bell"></i> Notice</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libsend_notice'"><i class="fas fa-paper-plane"></i> Send Notice</button>
+        <button onclick="window.location.href='/libview_notice'"><i class="fas fa-eye"></i> View Notices</button>
+      </div>
+      <button class="sidebar-btn attendance-btn dropdown"><i class="fas fa-calendar-check"></i> Attendance</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libmark_attendence'"><i class="fas fa-user-check"></i> Mark Attendance</button>
+        <button onclick="window.location.href='/libview_attendance'"><i class="fas fa-eye"></i> View Attendance</button>
+      </div>
+      <!-- Settings Button with Dropdown - Active state -->
+      <button class="sidebar-btn settings-btn dropdown active"><i class="fas fa-cog"></i> Settings</button>
+      <div class="dropdown-content" style="display: block;">
+        <button onclick="window.location.href='/fine_settings'"><i class="fas fa-rupee-sign"></i> Fine Settings</button>
+        <button onclick="window.location.href='/subscription_settings'"><i class="fas fa-id-card"></i> Subscription Settings</button>
+        <button onclick="window.location.href='/holiday_settings'" class="active"><i class="fas fa-calendar-times"></i> Holiday Settings</button>
+        <button onclick="window.location.href='/theme_settings'"><i class="fas fa-palette"></i> Theme Settings</button>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="window.location.href='/'"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+
+  <!-- Dashboard content -->
+  <div class="dashboard">
+    <div class="dashboard-container">
+      <!-- Welcome Card -->
+      <div class="welcome-card">
+        <h1><i class="fas fa-calendar-times"></i> Holiday Settings</h1>
+        <p>Manage library holidays and closing dates</p>
+      </div>
+      
+      <!-- Main content -->
+      <div class="stats-card">
+        <div class="settings-group">
+          <h3><i class="fas fa-plus-circle"></i> Add New Holiday</h3>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="holiday-name">Holiday Name</label>
+              <input type="text" id="holiday-name" placeholder="E.g., Independence Day">
+            </div>
+            <div class="form-group">
+              <label for="holiday-date">Date</label>
+              <input type="date" id="holiday-date">
+            </div>
+          </div>
+          <button class="add-btn" id="add-holiday-btn"><i class="fas fa-plus"></i> Add Holiday</button>
+        </div>
+        
+        <div class="settings-group">
+          <h3><i class="fas fa-calendar-alt"></i> Upcoming Holidays</h3>
+          <div class="holiday-list" id="holiday-list">
+            <!-- Holidays will be added here dynamically -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toast-message">Holiday added successfully!</span>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Set min date to today
+      document.getElementById('holiday-date').min = new Date().toISOString().split('T')[0];
+      
+      // Add holiday functionality
+      document.getElementById('add-holiday-btn').addEventListener('click', function() {
+        const name = document.getElementById('holiday-name').value;
+        const date = document.getElementById('holiday-date').value;
+        
+        if (!name || !date) {
+          showToast('Please fill all fields', true);
+          return;
+        }
+        
+        const formattedDate = new Date(date).toLocaleDateString('en-US', {
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric'
+        });
+        
+        const holidayHTML = `
+          <div class="holiday-item">
+            <div>
+              <div class="holiday-date">${formattedDate}</div>
+              <div class="holiday-name">${name}</div>
+            </div>
+            <div class="holiday-actions">
+              <button class="delete-btn"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+        `;
+        
+        document.getElementById('holiday-list').insertAdjacentHTML('afterbegin', holidayHTML);
+        document.getElementById('holiday-name').value = '';
+        document.getElementById('holiday-date').value = '';
+        showToast('Holiday added successfully!');
+      });
+      
+      // Delete holiday functionality
+      document.getElementById('holiday-list').addEventListener('click', function(e) {
+        if (e.target.closest('.delete-btn')) {
+          e.target.closest('.holiday-item').remove();
+          showToast('Holiday removed successfully!');
+        }
+      });
+      
+      // Initialize dropdown functionality - Same as libhome.html
+      const dropdowns = document.querySelectorAll('.sidebar-btn.dropdown'); 
+      dropdowns.forEach(btn => { 
+        btn.addEventListener('click', (e) => {
+          // Don't toggle if clicking on a dropdown button that's already active
+          if (e.target.classList.contains('active')) {
+            return;
+          }
+          
+          dropdowns.forEach(b => { 
+            if (b !== btn) b.classList.remove('active'); 
+          }); 
+          btn.classList.toggle('active'); 
+        }); 
+      }); 
+
+      // Close dropdowns when clicking outside - Same as libhome.html
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.sidebar-btn.dropdown')) {
+          dropdowns.forEach(btn => {
+            btn.classList.remove('active');
+          });
+        }
+      });
+    });
+    
+    // Toast function - Same as libhome.html
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      toastMessage.textContent = message;
+      
+      if (isError) {
+        toast.classList.add('error');
+      } else {
+        toast.classList.remove('error');
+      }
+      
+      toast.classList.add('show');
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

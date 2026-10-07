@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>View Attendance - GP Library</title>
+  <link rel="stylesheet" href="{{url_for('static',filename='styles2.css')}}"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    .filter-container button {
+      padding: 6px 12px;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="blur-bg"></div>
+   <div class="sidebar">
+    <div>
+    <div class="sidebar-title"><i class="fas fa-book-open"></i> GP Library</div>
+      <button class="sidebar-btn home-btn" onclick="window.location.href='/libhome'"><i class="fas fa-home"></i> Home</button>
+      <button class="sidebar-btn view-profile-btn" onclick="window.location.href='/libprofile'"><i class="fas fa-id-card"></i> View Profile</button>
+      <button class="sidebar-btn view-books-btn" onclick="window.location.href='/libbooks'"><i class="fas fa-book-reader"></i> View Books</button>
+      <button class="sidebar-btn book-history-btn" onclick="window.location.href='/libhistory'"><i class="fas fa-history"></i> Book History</button>
+      <button class="sidebar-btn students-btn" onclick="window.location.href='/libstudents'"><i class="fas fa-users"></i> Students</button>
+      <button class="sidebar-btn notice-btn dropdown"><i class="fas fa-bell"></i> Notice</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libsend_notice'"><i class="fas fa-paper-plane"></i> Send Notice</button>
+        <button onclick="window.location.href='/libview_notice'"><i class="fas fa-eye"></i> View Notices</button>
+      </div>
+      <button class="sidebar-btn attendance-btn dropdown"><i class="fas fa-calendar-check"></i> Attendance</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libmark_attendence'"><i class="fas fa-user-check"></i> Mark Attendance</button>
+        <button onclick="window.location.href='/libview_attendance'"><i class="fas fa-eye"></i> View Attendance</button>
+      </div>
+      <button class="sidebar-btn settings-btn dropdown active"><i class="fas fa-cog"></i> Settings</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/fine_settings'"><i class="fas fa-rupee-sign"></i> Fine Settings</button>
+        <button onclick="window.location.href='/subscription_settings'"><i class="fas fa-id-card"></i> Subscription Settings</button>
+        <!--<button onclick="window.location.href='/holiday_settings'"><i class="fas fa-calendar-times"></i> Holiday Settings</button>
+        <button onclick="window.location.href='/theme_settings'"><i class="fas fa-palette"></i> Theme Settings</button> -->
+      </div>
+    </div>
+    <button class="logout-btn" onclick="window.location.href='/'"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+
+
+  <div class="dashboard">
+    <div class="home-layout">
+      <h1><i class="fas fa-calendar-check"></i> View Attendance</h1>
+      <div class="filter-container">
+        <!-- Filters same as before -->
+        <div class="filter-group">
+          <label for="fromDate">From:</label>
+          <input type="date" id="fromDate" />
+        </div>
+        <div class="filter-group">
+          <label for="toDate">To:</label>
+          <input type="date" id="toDate" />
+        </div>
+        <div class="filter-group">
+          <label for="searchInput">Search:</label>
+          <input type="text" id="searchInput" placeholder="Search by student name..." />
+        </div>
+        <button class="add-btn" onclick="filterAttendance()" style="height: 3.5em;"><i class="fas fa-filter"></i> Filter</button>
+        <br>
+        <button class="add-btn" onclick="generateReport()" style="height: 3.5em;"><i class="fas fa-print"></i> Print Report</button>
+        <button class="add-btn" onclick="generatePDF()" style="height: 3.5em;"><i class="fas fa-file-pdf"></i> Save as PDF</button>
+      </div>
+
+      <div class="data-table-container">
+        <table class="data-table" id="attendanceTable">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Student Name</th>
+              <th>Student ID</th>
+              <th>Date</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="attendanceTableBody">
+            <!-- Filled by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="form-actions">
+        <button class="back-btn" onclick="window.location.href='library.html'">
+          <i class="fas fa-arrow-left"></i> Back to Home
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function filterAttendance() {
+      const fromDate = document.getElementById('fromDate').value;
+      const toDate = document.getElementById('toDate').value;
+      const search = document.getElementById('searchInput').value;
+
+      fetch('/api/view_attendance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from_date: fromDate,
+          to_date: toDate,
+          search: search
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success') {
+          renderAttendanceTable(data.data);
+        } else {
+          alert('Error: ' + data.message);
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert('Server error while fetching attendance data.');
+      });
+    }
+
+    function renderAttendanceTable(records) {
+      const tbody = document.getElementById("attendanceTableBody");
+      tbody.innerHTML = records.map(record => `
+        <tr>
+          <td>${record.id}</td>
+          <td>${record.student_name}</td>
+          <td>${record.student_id}</td>
+          <td>${record.date}</td>
+          <td>${record.status}</td>
+        </tr>
+      `).join('');
+    }
+
+    function generateReport() {
+      const table = document.getElementById("attendanceTable").cloneNode(true);
+      const win = window.open('', '', 'width=900,height=600');
+      win.document.write(`
+        <html><head><title>Attendance Report</title>
+        <style>
+          body { font-family: Arial; padding: 20px; }
+          h2 { text-align: center; }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+          }
+          th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+          }
+          th {
+            background-color: #f0f0f0;
+          }
+        </style></head><body>
+        <h2>📋 Attendance Report</h2>
+        ${table.outerHTML}
+        </body></html>
+      `);
+      win.document.close();
+      win.print();
+    }
+
+    function generatePDF() {
+      const table = document.getElementById("attendanceTable").cloneNode(true);
+      const wrapper = document.createElement("div");
+      wrapper.innerHTML = `<h2 style="text-align:center; margin-bottom: 20px;">📋 Attendance Report</h2>`;
+      wrapper.appendChild(table);
+      html2pdf().from(wrapper).set({
+        margin: 0.5,
+        filename: 'attendance-report.pdf',
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      }).save();
+    }
+
+    const dropdowns = document.querySelectorAll('.sidebar-btn.dropdown'); 
+    dropdowns.forEach(btn => { 
+      btn.addEventListener('click', (e) => {
+        if (e.target.classList.contains('active')) return;
+        dropdowns.forEach(b => { if (b !== btn) b.classList.remove('active'); }); 
+        btn.classList.toggle('active'); 
+      }); 
+    }); 
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.sidebar-btn.dropdown')) {
+        dropdowns.forEach(btn => btn.classList.remove('active'));
+      }
+    });
+
+    window.onload = filterAttendance;
+  </script>
+</body>
+</html>

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Send Notice</title>
+  <link rel="stylesheet" href="{{url_for('static',filename='styles.css')}}">
+</head>
+<body>
+  <div class="dashboard">
+    <div class="sidebar">
+      <h2>Admin</h2>
+      <button class="sidebar-btn" onclick="nav()">View Profile</button>
+      <button class="sidebar-btn" onclick="nav2()">Manage Librarian</button>
+      <button class="sidebar-btn" onclick="nav4()">Book Inventory</button>
+      <button class="sidebar-btn active" onclick="nav5()">Send Notice</button>
+      <button class="sidebar-btn logout-btn"  onclick="window.location.href='/'">Logout </button>
+    </div>
+    <div class="content">
+      <div class="content-panel active">
+        <div class="notice-nav">
+          <button class="active" onclick="loadN('send')">Send Notice</button>
+          <button onclick="loadN('view')">View Notices</button>
+        </div>
+
+        <!-- Send Notice Section -->
+        <div id="send-notice" class="notice-section" style="display: block;">
+          <h3>Send Notice</h3>
+          <form id="noticeForm">
+            <div class="form-group">
+              <label for="noticeRecipient">Recipient:</label>
+              <select id="noticeRecipient" required>
+                <option value="">Select Recipient</option>
+                <option>All Staff</option>
+                <option>All Students</option>
+                <option>Librarians Only</option>
+                <option>Specific Class</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="noticeSubject">Subject:</label>
+              <input type="text" id="noticeSubject" required>
+            </div>
+            <div class="form-group">
+              <label for="noticeMessage">Message:</label>
+              <textarea id="noticeMessage" rows="5" required></textarea>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="action-btn">Send Notice</button>
+              <button type="reset" class="action-btn cancel">Clear</button>
+            </div>
+          </form>
+          <h3 style="color: green;padding-top: 8px;" id="stat"></h3>
+        </div>
+
+        <!-- View Notices Section -->
+        <div id="view-notice" class="notice-section" style="display: none;">
+          <h3>View Notices</h3>
+          <div class="filter-section">
+            <div class="filter-group">
+              <input type="text" id="noticeSearch" placeholder="Search notices...">
+            </div>
+            <div class="filter-group">
+              <select id="dateFilter">
+                <option value="">All Dates</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="custom">Custom Range</option>
+              </select>
+            </div>
+            <div class="filter-group date-range" style="display:none;">
+              <input type="date" id="startDate">
+              <span>to</span>
+              <input type="date" id="endDate">
+            </div>
+            <button class="filter-btn" onclick="displayN(document.getElementById('noticeSearch').value, document.getElementById('dateFilter').value)">Filter</button>
+            <button class="filter-btn reset" onclick="displayN('','all')">Reset</button>
+          </div>
+
+          <div class="notices-list" id="viewn2">
+            <h2>Sent Notices</h2>
+            <br>
+            <div class="notices-list" id="viewn">
+              
+              <div class="notice-list"></div>
+                <h2>Received Notices</h2>
+
+            </div>
+            <h3 style="color: green;" id="stat2"></h3>
+          </div>
+        </div> <!-- End of View Notices -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function nav() {
+      window.location.href = "/profile";
+    }
+    function nav2() {
+      window.location.href = "/manage";
+    }
+    function nav4() {
+      window.location.href = "/inventory";
+    }
+    function nav5() {
+      window.location.href = "/notice";
+    }
+    function loadReceivedNotices() {
+  fetch('/loadReceivedNotices')
+    .then(response => response.json())
+    .then(data => {
+      const container = document.getElementById('viewn');
+      const receivedDiv = document.createElement('div');
+      receivedDiv.innerHTML = '<h2>Received Notices</h2>';
+      if (data.length === 0) {
+        receivedDiv.innerHTML += '<p>No received notices found.</p>';
+      } else {
+        data.forEach(notice => {
+          const item = document.createElement('div');
+          item.className = 'notice-item';
+          item.innerHTML = `
+            <div class="notice-header">
+              <h4>${notice.SUBJECT}</h4>
+              <span class="notice-date">${notice.NDATE}</span>
+              <span class="notice-recipient">From: ${notice.NFROM}</span>
+            </div>
+            <div class="notice-content">
+              <p>${notice.CONTENT}</p>
+            </div>
+          `;
+          receivedDiv.appendChild(item);
+        });
+      }
+      container.appendChild(receivedDiv);
+    })
+    .catch(error => {
+      console.error('Error fetching received notices:', error);
+    });
+}
+
+    // Handle form submission separately
+    document.getElementById('noticeForm').addEventListener('submit', function(e) {
+      e.preventDefault(); // Prevent page reload
+  
+      let recip = document.getElementById('noticeRecipient').value;
+      let sub = document.getElementById('noticeSubject').value;
+      let mess = document.getElementById('noticeMessage').value;
+  
+      if (!recip || !sub || !mess) {
+        alert("Please fill all fields");
+        return;
+      }
+  
+      fetch('/addnot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sender: "Admin",
+          receiver: recip,
+          subject: sub,
+          message: mess
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data === 'Sent') {
+          document.getElementById('stat').textContent = "Notice sent successfully!";
+          
+          // Optional: Clear form
+          document.getElementById('noticeForm').reset();
+        } else {
+          document.getElementById('stat').textContent = "Failed to send notice.";
+          document.getElementById('stat').style.color = "red";
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert("Something went wrong!");
+      });
+    });
+    let allNotices = []
+    // UI Navigation
+    function loadN(section, filterSubject = '', dateRange = 'all') {
+      document.querySelectorAll('.notice-section').forEach(el => {
+        el.style.display = 'none';
+      });
+  
+      document.querySelectorAll('.notice-nav button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+  
+      document.getElementById(`${section}-notice`).style.display = 'block';
+      document.querySelector(`.notice-nav button[onclick="loadN('${section}')"]`).classList.add('active');
+      document.getElementById('stat2').textContent="";
+      if(section === 'view') {
+  fetch('/loadNotices')
+    .then(response => response.json())
+    .then(data => {
+      allNotices = data;
+      displayN(filterSubject = '', dateRange = 'all');
+      loadReceivedNotices();  // 👈 Show Received Notices from Librarians
+    })
+    }
+    function displayN(filterSubject = '', dateRange = 'all') {
+  const container = document.getElementById('viewn');
+  container.innerHTML = '';
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfWeek = new Date(startOfToday);
+  startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay()); // Sunday
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  let startDate = null;
+  let endDate = now;
+
+  if (dateRange === 'today') {
+    startDate = startOfToday;
+  } else if (dateRange === 'week') {
+    startDate = startOfWeek;
+  } else if (dateRange === 'month') {
+    startDate = startOfMonth;
+  } else if (dateRange === 'custom') {
+    const startInput = document.getElementById('startDate').value;
+    const endInput = document.getElementById('endDate').value;
+    if (startInput && endInput) {
+      startDate = new Date(startInput);
+      endDate = new Date(endInput);
+      endDate.setHours(23, 59, 59, 999); // include full day
+    }
+  }
+
+  const filteredNotices = allNotices.filter(notice => {
+    const noticeDate = new Date(notice.NDATE);
+    const matchesSubject = notice.SUBJECT.toLowerCase().includes(filterSubject.toLowerCase());
+
+    let matchesDate = true;
+    if (startDate) {
+      matchesDate = (noticeDate >= startDate && noticeDate <= endDate);
+    }
+
+    return matchesSubject && matchesDate;
+  });
+
+  if (filteredNotices.length === 0) {
+    container.innerHTML = '<p>No notices found for the selected filter.</p>';
+    return;
+  }
+
+  filteredNotices.forEach(notice => {
+    const item = document.createElement('div');
+    item.className = 'notice-item';
+    item.innerHTML = `
+     
+      <div class="notice-header">
+        <h4>${notice.SUBJECT}</h4>
+        <span class="notice-date">${notice.NDATE}</span>
+        <span class="notice-recipient">${notice.NTO}</span>
+      </div>
+      <div class="notice-content">
+        <p>${notice.CONTENT}</p>
+      </div>
+      <div class="notice-actions">
+        <button class="action-btn cancel" onclick='del(this,${notice.NOTICE_ID})'>Delete</button>
+      </div>
+    `;
+    container.appendChild(item);
+  });
+}
+window.onload = function() {
+  document.getElementById('stat2').innerText="";
+  document.getElementById('stat').innerText="";
+  loadN('send');
+  
+};
+    
+  
+    
+function del(button,id){
+      const card=button.closest('.notice-actions');
+      fetch('/delnot',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({nid:id})
+      })
+      .then(response=>response.json())
+      .then(data=>{
+        let stat=data
+        if (stat=='Deleted') {
+          document.getElementById('stat2').textContent = "Notice deleted successfully!";
+          const noticeItem = button.closest('.notice-item');
+          if (noticeItem) noticeItem.remove(); 
+        }
+        else{
+          document.getElementById('stat2').style.color = "red";
+          document.getElementById('stat2').textContent = "Failed to delete notice.";}
+      })
+      .catch(error=>{
+        console.log(error);
+        alert('Something went wrong')
+      })
+}
+}
+  </script>
+  
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Book | GP Library</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="{{url_for('static',filename='styles2.css')}}">
+</head>
+<body>
+  <div class="blur-bg"></div>
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-title"><i class="fas fa-book-open"></i> GP Library</div>
+      <button class="sidebar-btn home-btn" onclick="window.location.href='/libhome'"><i class="fas fa-home"></i> Home</button>
+      <button class="sidebar-btn view-profile-btn" onclick="window.location.href='/libprofile'"><i class="fas fa-id-card"></i> View Profile</button>
+      <button class="sidebar-btn view-books-btn" onclick="window.location.href='/libbooks'"><i class="fas fa-book-reader"></i> View Books</button>
+      <button class="sidebar-btn book-history-btn" onclick="window.location.href='/libhistory'"><i class="fas fa-history"></i> Book History</button>
+      <button class="sidebar-btn students-btn" onclick="window.location.href='/libstudents'"><i class="fas fa-users"></i> Students</button>
+      <button class="sidebar-btn notice-btn dropdown"><i class="fas fa-bell"></i> Notice</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libsend_notice'"><i class="fas fa-paper-plane"></i> Send Notice</button>
+        <button onclick="window.location.href='/libview_notice'"><i class="fas fa-eye"></i> View Notices</button>
+      </div>
+      <button class="sidebar-btn attendance-btn dropdown"><i class="fas fa-calendar-check"></i> Attendance</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libmark_attendence'"><i class="fas fa-user-check"></i> Mark Attendance</button>
+        <button onclick="window.location.href='/libview_attendance'"><i class="fas fa-eye"></i> View Attendance</button>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="window.location.href='/'"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+  <div class="dashboard">
+    <div class="home-layout">
+      <h1><i class="fas fa-book-medical"></i> Add New Book</h1>
+      
+      <form class="add-form" id="addBookForm">
+        <h2>Book Details</h2>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="bookName">Book Name</label>
+            <input type="text" id="bookName" required placeholder="Enter book Name">
+          </div>
+          <div class="form-group">
+            <label for="bookYear">Year</label>
+            <input type="number" id="bookYear" required placeholder="Enter Published Year " min="0">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="bookAuthor">Author</label>
+            <input type="text" id="bookAuthor" required placeholder="Enter author name">
+          </div>
+          <div class="form-group">
+            <label for="bookIsbn">ISBN</label>
+            <input type="text" id="bookIsbn" required placeholder="Enter ISBN number">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="bookPublisher">Publisher</label>
+            <input type="text" id="bookPublisher" required placeholder="Enter publisher name">
+          </div>
+          <div class="form-group">
+            <label for="bookCategory">Category</label>
+            <input type="text" id="bookCategory" required placeholder="Enter Category of Book">
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="bookPages">Pages</label>
+            <input type="number" id="bookPages" required placeholder="Enter total pages" min="1">
+          </div>
+          <div class="form-group">
+            <label for="bookQuantity">Quantity</label>
+            <input type="number" id="bookQuantity" required placeholder="Enter quantity" min="1">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="bookDesc">Description</label>
+            <input type="text" id="bookDesc" required placeholder="Enter Description of Book">
+          </div>
+          <div class="form-group">
+            <label for="bookLang">Language</label>
+            <input type="text" id="bookLang" required placeholder="Enter Language of Book">
+          </div>
+        </div>
+        
+        <button type="submit" class="add-btn">
+          <i class="fas fa-plus-circle"></i> Add Book
+        </button>
+        
+        <div class="form-actions" style="margin-top: 20px;">
+          <button type="button" class="back-btn" onclick="window.location.href='/libhome'">Back to Home</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    let books = JSON.parse(localStorage.getItem('libraryBooks')) || [];
+    
+    document.getElementById("addBookForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      
+      const byear = document.getElementById("bookYear").value;
+      const bookName = document.getElementById("bookName").value;
+      const bookAuthor = document.getElementById("bookAuthor").value;
+      const bookIsbn = document.getElementById("bookIsbn").value;
+      const bookPublisher = document.getElementById("bookPublisher").value;
+      const bookCategory = document.getElementById("bookCategory").value;
+      const bookPages = document.getElementById("bookPages").value;
+      const bookQuantity = document.getElementById("bookQuantity").value;
+      const bookDesc = document.getElementById("bookDesc").value;
+      const bookLang = document.getElementById("bookLang").value;
+      fetch('addBook',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({name:bookName,author:bookAuthor,year:byear,ISBN:bookIsbn,publisher:bookPublisher,category:bookCategory,pages:bookPages,quantity:bookQuantity,desc:bookDesc,lang:bookLang})
+      })
+      .then(response=>response.json())
+      .then(data=>{
+        alert(data);
+      })
+      .catch(error=>{alert("error");console.log(error);})
+     
+      
+     
+    });
+    const dropdowns = document.querySelectorAll('.sidebar-btn.dropdown'); 
+    dropdowns.forEach(btn => { 
+      btn.addEventListener('click', (e) => {
+        // Don't toggle if clicking on a dropdown button that's already active
+        if (e.target.classList.contains('active')) {
+          return;
+        }
+        
+        dropdowns.forEach(b => { 
+          if (b !== btn) b.classList.remove('active'); 
+        }); 
+        btn.classList.toggle('active'); 
+      }); 
+    }); 
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.sidebar-btn.dropdown')) {
+        dropdowns.forEach(btn => {
+          btn.classList.remove('active');
+        });
+      }
+    });
+  </script>
+</body>
+</html>

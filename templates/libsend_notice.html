@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Send Notice</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles2.css') }}" />
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <style>
+     select {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        option {
+            background-color: #333;
+            color: white;
+        }
+  </style>
+</head>
+<body>
+  <div class="blur-bg"></div>
+
+  <div class="sidebar">
+    <div>
+      <div class="sidebar-title"><i class="fas fa-book-open"></i> GP Library</div>
+      <button class="sidebar-btn home-btn" onclick="window.location.href='/libhome'"><i class="fas fa-home"></i> Home</button>
+      <button class="sidebar-btn view-profile-btn" onclick="window.location.href='/libprofile'"><i class="fas fa-id-card"></i> View Profile</button>
+      <button class="sidebar-btn view-books-btn" onclick="window.location.href='/libbooks'"><i class="fas fa-book-reader"></i> View Books</button>
+      <button class="sidebar-btn book-history-btn" onclick="window.location.href='/libhistory'"><i class="fas fa-history"></i> Book History</button>
+      <button class="sidebar-btn students-btn" onclick="window.location.href='/libstudents'"><i class="fas fa-users"></i> Students</button>
+      <button class="sidebar-btn notice-btn dropdown"><i class="fas fa-bell"></i> Notice</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libsend_notice'"><i class="fas fa-paper-plane"></i> Send Notice</button>
+        <button onclick="window.location.href='/libview_notice'"><i class="fas fa-eye"></i> View Notices</button>
+      </div>
+      <button class="sidebar-btn attendance-btn dropdown"><i class="fas fa-calendar-check"></i> Attendance</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/libmark_attendence'"><i class="fas fa-user-check"></i> Mark Attendance</button>
+        <button onclick="window.location.href='/libview_attendance'"><i class="fas fa-eye"></i> View Attendance</button>
+      </div>
+      <button class="sidebar-btn settings-btn dropdown active"><i class="fas fa-cog"></i> Settings</button>
+      <div class="dropdown-content">
+        <button onclick="window.location.href='/fine_settings'"><i class="fas fa-rupee-sign"></i> Fine Settings</button>
+        <button onclick="window.location.href='/subscription_settings'"><i class="fas fa-id-card"></i> Subscription Settings</button>
+        <!--<button onclick="window.location.href='/holiday_settings'"><i class="fas fa-calendar-times"></i> Holiday Settings</button>
+        <button onclick="window.location.href='/theme_settings'"><i class="fas fa-palette"></i> Theme Settings</button> -->
+      </div>
+    </div>
+    <button class="logout-btn" onclick="window.location.href='/'"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+
+  <div class="dashboard" id="dashboard-content">
+    <div class="home-layout">
+      <h1><i class="fas fa-paper-plane"></i> Send Notice</h1>
+
+      <form class="add-form" id="sendNoticeForm">
+        <div class="form-group">
+          <label>Notice Title</label>
+          <input type="text" id="noticeTitle" required placeholder="Enter notice title" />
+        </div>
+
+        <div class="form-group">
+          <label>Notice Content</label>
+          <textarea id="noticeContent" rows="5" required placeholder="Enter notice content"></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="noticeDate" required />
+          </div>
+          <div class="form-group">
+            <label>Sender</label>
+            <input type="text" id="noticeSender" required value="Library Admin" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Recipient</label>
+          <select id="noticeRecipient" required onchange="handleRecipientChange()">
+            <option value="Admin">Admin</option>
+            <option value="All Students">All Students</option>
+            <option value="Specific Student">Specific Student</option>
+          </select>
+        </div>
+
+        <div id="specificStudentField" style="display: none;">
+          <div class="form-group">
+            <label>Student ID</label>
+            <input type="text" id="noticeStudentId" placeholder="Enter student ID" />
+          </div>
+          <div class="form-group">
+            <label>Student Name</label>
+            <input type="text" id="noticeStudentName" placeholder="Student Name" />
+          </div>
+          <div class="form-group">
+            <label>Course</label>
+            <input type="text" id="noticeStudentCourse" placeholder="Course" />
+          </div>
+        </div>
+
+        <button type="submit" class="add-btn">
+          <i class="fas fa-paper-plane"></i> Send Notice
+        </button>
+
+        <div id="noticeResult" style="margin-top: 10px; font-weight: bold;"></div>
+
+        <div class="form-actions" style="margin-top: 20px;">
+          <button type="button" class="back-btn" onclick="location.reload()">Back to Home</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Set today's date in date input
+    document.getElementById("noticeDate").value = new Date().toISOString().split("T")[0];
+
+    function handleRecipientChange() {
+      const recipient = document.getElementById("noticeRecipient").value;
+      document.getElementById("specificStudentField").style.display = recipient === "Specific Student" ? "block" : "none";
+    }
+
+    document.getElementById("sendNoticeForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const recipient = document.getElementById("noticeRecipient").value;
+
+      const notice = {
+        title: document.getElementById("noticeTitle").value,
+        content: document.getElementById("noticeContent").value,
+        date: document.getElementById("noticeDate").value,
+        sender: document.getElementById("noticeSender").value,
+        recipient: recipient,
+        student_id: "",
+        student_name: "",
+        course: ""
+      };
+
+      if (recipient == "Specific Student") {
+        notice.student_id = document.getElementById("noticeStudentId").value;
+        notice.student_name = document.getElementById("noticeStudentName").value;
+        notice.course = document.getElementById("noticeStudentCourse").value;
+      }
+      
+      fetch('/libsendnotice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(notice)
+      })
+        .then(res => res.json())
+        .then(response => {
+          document.getElementById("noticeResult").textContent = response.message || "Notice sent successfully!";
+          document.getElementById("sendNoticeForm").reset();
+          handleRecipientChange();
+          document.getElementById("noticeDate").value = new Date().toISOString().split("T")[0];
+        })
+        .catch(error => {
+          document.getElementById("noticeResult").textContent = "Error sending notice: " + error.message;
+        });
+    });
+
+    // Dropdown behavior
+    const dropdowns = document.querySelectorAll('.sidebar-btn.dropdown');
+    dropdowns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        if (e.target.classList.contains('active')) return;
+        dropdowns.forEach(b => { if (b !== btn) b.classList.remove('active'); });
+        btn.classList.toggle('active');
+      });
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.sidebar-btn.dropdown')) {
+        dropdowns.forEach(btn => btn.classList.remove('active'));
+      }
+    });
+  </script>
+</body>
+</html>
